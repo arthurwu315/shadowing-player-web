@@ -13,6 +13,26 @@
     button { transition: transform 120ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease; }
     button:active { transform: scale(0.96); }
     .subtitle-row { scroll-margin-block: 35vh; }
+    .control-tower {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.26);
+    }
+    .pill-btn {
+      min-height: 44px;
+      border-radius: 9999px;
+      border: 1px solid #475569;
+      background: #1e293b;
+      padding: 0.55rem 0.95rem;
+      font-size: 0.9rem;
+      line-height: 1.1rem;
+      white-space: nowrap;
+    }
     .global-blur .subtitle-text { filter: blur(5px); opacity: 0.82; }
     .global-blur .subtitle-row.is-current .subtitle-text,
     .global-blur .subtitle-row:hover .subtitle-text,
@@ -20,7 +40,8 @@
     .global-blur .subtitle-row:focus-within .subtitle-text { filter: none; opacity: 1; }
     .subtitle-row.is-current {
       border: 3px solid #3b82f6 !important;
-      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2), 0 10px 28px rgba(59, 130, 246, 0.24);
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2), 0 14px 34px rgba(59, 130, 246, 0.34);
+      transform: scale(1.02);
     }
   </style>
 </head>
@@ -43,44 +64,45 @@
       <p id="status" class="mt-3 text-sm text-slate-300">尚未載入影片</p>
     </section>
 
-    <section class="mt-4 sm:mt-6 bg-card/90 border border-slate-700 rounded-2xl p-3 sm:p-4 shadow-xl">
-      <div class="aspect-video w-full rounded-xl overflow-hidden bg-black"><div id="player" class="w-full h-full"></div></div>
-      <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
-        <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">影片：<span id="videoIdText">-</span></span>
-        <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">字幕行數：<span id="countText">0</span></span>
-        <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">目前句：<span id="currentLineText">-</span></span>
-        <button id="stopLoopBtn" class="min-h-12 rounded-xl border border-rose-400 text-rose-300 px-4 py-2">停止循環</button>
+    <section id="controlTower" class="control-tower mt-4 sm:mt-6 rounded-2xl p-3 sm:p-4">
+      <div class="bg-card/70 border border-slate-700 rounded-2xl p-3 sm:p-4">
+        <div class="aspect-video w-full rounded-xl overflow-hidden bg-black"><div id="player" class="w-full h-full"></div></div>
+        <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
+          <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">影片：<span id="videoIdText">-</span></span>
+          <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">字幕行數：<span id="countText">0</span></span>
+          <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">目前句：<span id="currentLineText">-</span></span>
+          <button id="stopLoopBtn" class="min-h-12 rounded-xl border border-rose-400 text-rose-300 px-4 py-2">停止循環</button>
+        </div>
+        <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <button id="prevBtn" class="min-h-14 rounded-xl bg-slate-800 border border-slate-600 text-base font-semibold">上一句</button>
+          <button id="replayBtn" class="min-h-14 rounded-xl bg-cyan-400 text-slate-900 text-base font-semibold">重新播放本句</button>
+          <button id="nextBtn" class="min-h-14 rounded-xl bg-slate-800 border border-slate-600 text-base font-semibold">下一句</button>
+        </div>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button data-rate-btn="0.75" class="rate-btn min-h-12 px-4 rounded-xl border border-slate-600 bg-slate-800">0.75x</button>
+          <button data-rate-btn="1" class="rate-btn min-h-12 px-4 rounded-xl border border-cyan-300 bg-cyan-400 text-slate-900 font-semibold">1x</button>
+          <button data-rate-btn="1.25" class="rate-btn min-h-12 px-4 rounded-xl border border-slate-600 bg-slate-800">1.25x</button>
+        </div>
+        <div class="mt-3">
+          <label class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 flex items-center justify-between">
+            <span>Auto-Pause（句尾留白）</span><input id="autoPauseToggle" type="checkbox" class="h-5 w-5" />
+          </label>
+        </div>
       </div>
-      <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <button id="prevBtn" class="min-h-14 rounded-xl bg-slate-800 border border-slate-600 text-base font-semibold">上一句</button>
-        <button id="replayBtn" class="min-h-14 rounded-xl bg-cyan-400 text-slate-900 text-base font-semibold">重新播放本句</button>
-        <button id="nextBtn" class="min-h-14 rounded-xl bg-slate-800 border border-slate-600 text-base font-semibold">下一句</button>
-      </div>
-      <div class="mt-3 flex flex-wrap gap-2">
-        <button data-rate-btn="0.75" class="rate-btn min-h-12 px-4 rounded-xl border border-slate-600 bg-slate-800">0.75x</button>
-        <button data-rate-btn="1" class="rate-btn min-h-12 px-4 rounded-xl border border-cyan-300 bg-cyan-400 text-slate-900 font-semibold">1x</button>
-        <button data-rate-btn="1.25" class="rate-btn min-h-12 px-4 rounded-xl border border-slate-600 bg-slate-800">1.25x</button>
-      </div>
-      <div class="mt-3">
-        <label class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 flex items-center justify-between">
-          <span>Auto-Pause（句尾留白）</span><input id="autoPauseToggle" type="checkbox" class="h-5 w-5" />
-        </label>
+      <div class="mt-3 border-t border-slate-600/50 pt-3">
+        <h2 class="text-base sm:text-lg font-semibold mb-3">全局顯示控制面板</h2>
+        <div class="flex flex-wrap gap-2">
+          <button id="globalShowEnBtn" class="pill-btn">🇬🇧 英文</button>
+          <button id="globalShowZhBtn" class="pill-btn">🇨🇳 中文</button>
+          <button id="globalShowBothBtn" class="pill-btn">🌐 雙語</button>
+          <button id="globalBlurBtn" class="pill-btn">🕶️ 盲聽</button>
+          <button id="focusModeBtn" class="pill-btn">🎯 聚焦</button>
+          <button id="lineRateResetBtn" class="pill-btn">⏩ 下一句回 1x</button>
+        </div>
       </div>
     </section>
 
-    <section class="mt-4 bg-card/90 border border-slate-700 rounded-2xl p-3 sm:p-4 shadow-xl">
-      <h2 class="text-base sm:text-lg font-semibold mb-3">全局顯示控制面板</h2>
-      <div class="grid grid-cols-2 sm:grid-cols-6 gap-2">
-        <button id="globalShowEnBtn" class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm sm:text-base">全部顯示英文</button>
-        <button id="globalShowZhBtn" class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm sm:text-base">全部顯示中文</button>
-        <button id="globalShowBothBtn" class="min-h-12 rounded-xl border border-cyan-300 bg-cyan-400 text-slate-900 px-4 py-3 text-sm sm:text-base font-semibold">全部顯示雙語</button>
-        <button id="globalBlurBtn" class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm sm:text-base">全部模糊（盲聽）</button>
-        <button id="focusModeBtn" class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm sm:text-base">僅顯示當前句子</button>
-        <button id="lineRateResetBtn" class="min-h-12 rounded-xl border border-cyan-300 bg-cyan-400 text-slate-900 px-4 py-3 text-sm sm:text-base font-semibold">跳下一句回 1x：開</button>
-      </div>
-    </section>
-
-    <section class="mt-4 sm:mt-6">
+    <section id="transcriptSection" class="mt-4 sm:mt-6">
       <h2 class="text-lg sm:text-xl font-semibold mb-3">所有字幕行</h2>
       <div id="transcriptList" class="space-y-2"></div>
     </section>
@@ -131,6 +153,8 @@
       globalBlurBtn: document.getElementById("globalBlurBtn"),
       focusModeBtn: document.getElementById("focusModeBtn"),
       lineRateResetBtn: document.getElementById("lineRateResetBtn"),
+      controlTower: document.getElementById("controlTower"),
+      transcriptSection: document.getElementById("transcriptSection"),
       manualDialog: document.getElementById("manualDialog"),
       manualDurationInput: document.getElementById("manualDurationInput"),
       manualEnInput: document.getElementById("manualEnInput"),
@@ -318,15 +342,15 @@
       } catch {}
     }
     function refreshGlobalButtons() {
-      const active = "min-h-12 rounded-xl border border-cyan-300 bg-cyan-400 text-slate-900 px-4 py-3 text-sm sm:text-base font-semibold";
-      const normal = "min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm sm:text-base";
+      const active = "pill-btn border-cyan-300 bg-cyan-400 text-slate-900 font-semibold";
+      const normal = "pill-btn border-slate-600 bg-slate-800";
       ui.globalShowEnBtn.className = globalLangMode === "en" ? active : normal;
       ui.globalShowZhBtn.className = globalLangMode === "zh" ? active : normal;
       ui.globalShowBothBtn.className = globalLangMode === "both" ? active : normal;
       ui.globalBlurBtn.className = globalBlurEnabled ? active : normal;
       ui.focusModeBtn.className = focusModeEnabled ? active : normal;
       ui.lineRateResetBtn.className = autoResetLineRate ? active : normal;
-      ui.lineRateResetBtn.textContent = `跳下一句回 1x：${autoResetLineRate ? "開" : "關"}`;
+      ui.lineRateResetBtn.textContent = autoResetLineRate ? "⏩ 下一句回 1x：開" : "⏩ 下一句回 1x：關";
     }
     function applyGlobalLang(mode) {
       globalLangMode = mode;
@@ -378,7 +402,16 @@
     function scrollCurrentIntoCenter() {
       const currentCard = document.querySelector(`[data-line="${currentLineIndex}"]`);
       if (!currentCard) return;
-      currentCard.scrollIntoView({ behavior: "smooth", block: "center" });
+      const towerH = ui.controlTower ? ui.controlTower.offsetHeight : 0;
+      const rect = currentCard.getBoundingClientRect();
+      const cardCenter = rect.top + (rect.height / 2);
+      const visibleCenter = towerH + ((window.innerHeight - towerH) / 2);
+      const delta = cardCenter - visibleCenter;
+      window.scrollTo({ top: window.scrollY + delta, behavior: "smooth" });
+    }
+    function syncTranscriptOffset() {
+      const towerH = ui.controlTower ? ui.controlTower.offsetHeight : 0;
+      ui.transcriptSection.style.paddingTop = `${Math.max(10, Math.round(towerH * 0.06))}px`;
     }
     function setCurrent(i) {
       const changed = i !== currentLineIndex;
@@ -495,7 +528,7 @@
         const row = document.createElement("div");
         row.className = `subtitle-row rounded-xl border border-slate-700 bg-line/70 p-3 sm:p-4${hiddenClass}`;
         row.setAttribute("data-line", String(i));
-        row.innerHTML = `<div class="flex flex-col gap-3"><div class="flex flex-wrap items-center gap-2"><button data-jump-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl bg-cyan-400 text-slate-900 px-4 py-2 font-semibold text-base">${fmt(line.start)} 跳到這句</button><button data-loop-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl border border-slate-500 px-4 py-2 text-base">🔁 循環</button><button data-playpause-btn="${i}" class="min-h-12 rounded-xl border border-amber-400 text-amber-300 px-4 py-2 text-base">${playPauseLabel}</button><button data-line-rate="${i}" data-line-rate-value="${preferredSlowRate}" class="min-h-10 rounded-lg border border-violet-400 text-violet-300 px-3 py-1 text-sm">${preferredSlowRate}x</button><button data-line-rate="${i}" data-line-rate-value="1" class="min-h-10 rounded-lg border border-violet-400 text-violet-300 px-3 py-1 text-sm">1x</button><span data-count-label="${i}" class="px-3 py-2 rounded-xl border border-slate-500 text-sm text-slate-200">${count} 次</span><button data-toggle-en="${i}" class="min-h-10 rounded-lg border px-3 py-1 text-sm ${line.showEn ? "border-emerald-400 text-emerald-300" : "border-slate-500 text-slate-300"}">英</button><button data-toggle-zh="${i}" class="min-h-10 rounded-lg border px-3 py-1 text-sm ${line.showZh ? "border-sky-400 text-sky-300" : "border-slate-500 text-slate-300"}">中</button></div>${enBlock}${zhBlock}</div>`;
+        row.innerHTML = `<div class="flex flex-col gap-3"><div class="flex flex-wrap items-center gap-2"><button data-jump-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl bg-cyan-400 text-slate-900 px-4 py-2 font-semibold text-base">${fmt(line.start)} 跳到這句</button><button data-loop-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl border border-slate-500 px-4 py-2 text-base">🔁 循環</button><button data-playpause-btn="${i}" class="min-h-12 rounded-xl border border-amber-400 text-amber-300 px-4 py-2 text-base">${playPauseLabel}</button><button data-line-rate="${i}" data-line-rate-value="${preferredSlowRate}" class="min-h-10 rounded-lg border border-violet-400 text-violet-300 px-3 py-1 text-sm">${preferredSlowRate}x</button><button data-line-rate="${i}" data-line-rate-value="1" class="min-h-10 rounded-lg border border-violet-400 text-violet-300 px-3 py-1 text-sm">1x</button><span data-count-label="${i}" class="h-9 min-w-9 px-2 rounded-full border border-slate-500 bg-slate-900 text-sm text-slate-100 inline-flex items-center justify-center font-semibold">${count}</span><button data-toggle-en="${i}" class="min-h-10 rounded-lg border px-3 py-1 text-sm ${line.showEn ? "border-emerald-400 text-emerald-300" : "border-slate-500 text-slate-300"}">英</button><button data-toggle-zh="${i}" class="min-h-10 rounded-lg border px-3 py-1 text-sm ${line.showZh ? "border-sky-400 text-sky-300" : "border-slate-500 text-slate-300"}">中</button></div>${enBlock}${zhBlock}</div>`;
         row.addEventListener("pointerdown", () => row.classList.add("force-reveal"));
         ["pointerup", "pointercancel", "pointerleave"].forEach((e) => row.addEventListener(e, () => row.classList.remove("force-reveal")));
         ui.transcriptList.appendChild(row);
@@ -588,6 +621,7 @@
       ui.videoIdText.textContent = videoId;
       ensurePlayer(videoId);
       loadUiState();
+      syncTranscriptOffset();
       refreshGlobalButtons();
       setGlobalBlur(globalBlurEnabled);
       clearLoop(); clearAutoPause(); completeLockIndex = null; currentLineIndex = -1;
@@ -615,6 +649,8 @@
     ui.lineRateResetBtn.addEventListener("click", () => setAutoResetLineRate(!autoResetLineRate));
     document.querySelectorAll("[data-rate-btn]").forEach((b) => b.addEventListener("click", () => setRate(Number(b.getAttribute("data-rate-btn")))));
     ui.urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") loadVideoAndTranscript(); });
+    window.addEventListener("resize", syncTranscriptOffset);
+    syncTranscriptOffset();
     refreshGlobalButtons();
     setStatus("尚未載入影片");
   </script>
