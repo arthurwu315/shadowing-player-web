@@ -12,14 +12,15 @@
     .safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
     button { transition: transform 120ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease; }
     button:active { transform: scale(0.96); }
+    .subtitle-row { scroll-margin-block: 35vh; }
     .global-blur .subtitle-text { filter: blur(5px); opacity: 0.82; }
     .global-blur .subtitle-row.is-current .subtitle-text,
     .global-blur .subtitle-row:hover .subtitle-text,
     .global-blur .subtitle-row.force-reveal .subtitle-text,
     .global-blur .subtitle-row:focus-within .subtitle-text { filter: none; opacity: 1; }
     .subtitle-row.is-current {
-      border-color: #38bdf8;
-      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.25), 0 8px 28px rgba(56, 189, 248, 0.2);
+      border: 3px solid #3b82f6 !important;
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2), 0 10px 28px rgba(59, 130, 246, 0.24);
     }
   </style>
 </head>
@@ -375,9 +376,9 @@
       if (row) row.classList.add("ring-2", "ring-cyan-400", "is-current");
     }
     function scrollCurrentIntoCenter() {
-      const row = document.querySelector(`[data-line="${currentLineIndex}"]`);
-      if (!row) return;
-      row.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      const currentCard = document.querySelector(`[data-line="${currentLineIndex}"]`);
+      if (!currentCard) return;
+      currentCard.scrollIntoView({ behavior: "smooth", block: "center" });
     }
     function setCurrent(i) {
       const changed = i !== currentLineIndex;
@@ -483,7 +484,7 @@
       ui.countText.textContent = String(transcript.length);
       if (!transcript.length) { ui.transcriptList.innerHTML = `<div class="rounded-xl border border-slate-700 bg-card p-4 text-slate-300">沒有可顯示的字幕。</div>`; return; }
       transcript.forEach((line, i) => {
-        const hiddenClass = focusModeEnabled && currentLineIndex >= 0 && i !== currentLineIndex ? " hidden" : "";
+        const hiddenClass = focusModeEnabled && i !== currentLineIndex ? " hidden" : "";
         const count = Number(countsByLine[countKey(line)] || 0);
         const isCurrent = i === currentLineIndex;
         const enVisible = (line.showEn || isCurrent) && line.en;
@@ -596,7 +597,7 @@
       catch { transcript = []; render(); setStatus(FAIL_MSG, true); alert(FAIL_MSG); }
     }
 
-    window.onYouTubeIframeAPIReady = () => { playerReady = true; clearInterval(tickTimer); tickTimer = setInterval(tick, 180); setRate(currentPlaybackRate); };
+    window.onYouTubeIframeAPIReady = () => { playerReady = true; clearInterval(tickTimer); tickTimer = setInterval(tick, 100); setRate(currentPlaybackRate); };
     ui.loadBtn.addEventListener("click", loadVideoAndTranscript);
     ui.manualOpenBtn.addEventListener("click", () => ui.manualDialog.showModal());
     ui.manualCancelBtn.addEventListener("click", () => ui.manualDialog.close());
