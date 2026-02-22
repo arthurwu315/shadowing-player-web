@@ -17,14 +17,16 @@
       color: #2B2D42 !important;
       font-family: "Noto Sans TC", "Segoe UI", sans-serif;
     }
-    .safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+    .app-shell { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .top-pane { flex: 0 0 auto; max-height: 60vh; overflow: auto; }
+    .bottom-pane { flex: 1 1 auto; overflow-y: auto; min-height: 0; }
     .pixel-title, .count-badge { font-family: "VT323", monospace; letter-spacing: 0.03em; }
     section, dialog, .subtitle-row, button, .pill-btn, input, textarea, label {
       border-radius: 0 !important;
       border: 2px solid #000 !important;
       box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 1) !important;
     }
-    section, dialog, .subtitle-row, label { background: rgba(255, 255, 255, 0.82) !important; }
+    section, dialog, .subtitle-row, label { background: #ffffff !important; }
     input, textarea { background: #fffdf9 !important; color: #2B2D42 !important; }
     button, .pill-btn, .subtitle-text, label, p, .text-sm, .text-base {
       font-family: system-ui, -apple-system, "Segoe UI", sans-serif !important;
@@ -36,7 +38,10 @@
       background: #A3B18A !important;
       color: #1f2937 !important;
       font-weight: 700;
+      padding-left: 0.9rem !important;
+      padding-right: 0.9rem !important;
     }
+    button:hover, .pill-btn:hover { filter: brightness(0.92); transform: translateY(-1px); }
     button:active, .pill-btn:active {
       transform: translate(1px, 1px) scale(0.95);
       box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 1) !important;
@@ -48,11 +53,8 @@
     .subtitle-row .text-sky-200 { color: #2B2D42 !important; }
     .count-badge { background: #f5efe5 !important; color: #2B2D42 !important; }
     .subtitle-row { scroll-margin-block: 35vh; }
-    .subtitle-row { scroll-margin-top: var(--tower-offset, 120px); }
     .control-tower {
-      position: sticky;
-      top: 0;
-      z-index: 40;
+      position: relative;
       transition: all 0.3s ease-in-out;
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
@@ -60,18 +62,8 @@
       border-bottom: 2px solid #000 !important;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
     }
-    .control-panel {
-      max-height: 999px;
-      overflow: hidden;
-      transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.2s ease;
-    }
-    .control-tower.compact .control-panel {
-      max-height: 0;
-      opacity: 0;
-      margin: 0;
-      border: 0 !important;
-      box-shadow: none !important;
-    }
+    .control-panel { max-height: 999px; overflow: hidden; transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.2s ease; }
+    .control-tower.compact .control-panel { max-height: 0; opacity: 0; margin: 0; border: 0 !important; box-shadow: none !important; }
     .tower-global-row {
       max-height: 74px;
       overflow-x: auto;
@@ -79,9 +71,7 @@
       white-space: nowrap;
       align-items: center;
     }
-    @media (max-width: 640px) {
-      .control-panel { max-height: 80px; overflow: auto; }
-    }
+    @media (max-width: 640px) { .control-panel { max-height: 80px; overflow: auto; } }
     .pill-btn {
       min-height: 44px;
       border-radius: 9999px !important;
@@ -99,9 +89,27 @@
     .global-blur .subtitle-row:focus-within .subtitle-text { filter: none; opacity: 1; }
     .subtitle-row.is-current {
       border: 3px solid #3b82f6 !important;
-      background: #FFDDD2 !important;
+      background: rgba(255, 221, 210, 0.5) !important;
       box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2), 0 14px 34px rgba(59, 130, 246, 0.34);
       transform: scale(1.02);
+      position: relative;
+    }
+    .subtitle-row.is-current::before {
+      content: "";
+      position: absolute;
+      left: -3px;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      background: #3b82f6;
+    }
+    .bottom-pane::-webkit-scrollbar { width: 10px; }
+    .bottom-pane::-webkit-scrollbar-track { background: #d9d9d9; border-left: 2px solid #000; }
+    .bottom-pane::-webkit-scrollbar-thumb { background: #2f2f2f; border: 2px solid #000; }
+    .bottom-pane { scrollbar-color: #2f2f2f #d9d9d9; scrollbar-width: thin; }
+    @media (min-width: 1024px) {
+      .top-pane-inner { max-width: 1100px; margin: 0 auto; width: 100%; }
+      #transcriptList { max-width: 56rem; margin: 0 auto; }
     }
     @media (orientation: landscape) and (max-height: 560px) {
       #controlTower { padding: 0.4rem !important; }
@@ -114,7 +122,9 @@
   </style>
 </head>
 <body class="bg-bg text-slate-100 min-h-screen">
-  <div class="max-w-5xl mx-auto px-4 py-5 sm:py-8 safe-bottom">
+  <div class="app-shell">
+    <div class="top-pane px-4 pt-4 sm:pt-6">
+      <div class="top-pane-inner">
     <header class="mb-5 sm:mb-6">
       <h1 class="pixel-title text-2xl sm:text-3xl font-bold tracking-tight">YouTube 跟讀播放器</h1>
       <p class="text-slate-300 mt-2 text-sm sm:text-base">雙語字幕、句子跳轉、單句循環、Auto-Pause、顯示控制、計數器。</p>
@@ -172,7 +182,10 @@
       </div>
     </section>
 
-    <section id="transcriptSection" class="mt-4 sm:mt-6">
+      </div>
+    </div>
+
+    <section id="transcriptSection" class="bottom-pane px-4 pb-4 pt-3">
       <h2 class="text-lg sm:text-xl font-semibold mb-3">所有字幕行</h2>
       <div id="transcriptList" class="space-y-2"></div>
     </section>
@@ -481,18 +494,10 @@
     function scrollCurrentIntoCenter() {
       const currentCard = document.querySelector(`[data-line="${currentLineIndex}"]`);
       if (!currentCard) return;
-      const towerH = ui.controlTower ? ui.controlTower.offsetHeight : 0;
-      const rect = currentCard.getBoundingClientRect();
-      const cardCenter = rect.top + (rect.height / 2);
-      const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-      const visibleCenter = towerH + ((viewportHeight - towerH) / 2);
-      const delta = cardCenter - visibleCenter;
-      window.scrollTo({ top: window.scrollY + delta, behavior: "smooth" });
+      currentCard.scrollIntoView({ behavior: "smooth", block: "center" });
     }
     function syncTranscriptOffset() {
-      const towerH = ui.controlTower ? ui.controlTower.offsetHeight : 0;
-      ui.transcriptSection.style.paddingTop = `${Math.max(10, Math.round(towerH * 0.12))}px`;
-      document.documentElement.style.setProperty("--tower-offset", `${Math.max(64, towerH + 10)}px`);
+      ui.transcriptSection.style.paddingTop = "12px";
     }
     function setCurrent(i) {
       const changed = i !== currentLineIndex;
@@ -736,8 +741,8 @@
     ui.lineRateResetBtn.addEventListener("click", () => setAutoResetLineRate(!autoResetLineRate));
     document.querySelectorAll("[data-rate-btn]").forEach((b) => b.addEventListener("click", () => setRate(Number(b.getAttribute("data-rate-btn")))));
     ui.urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") loadVideoAndTranscript(); });
-    window.addEventListener("scroll", () => {
-      const y = window.scrollY;
+    ui.transcriptSection.addEventListener("scroll", () => {
+      const y = ui.transcriptSection.scrollTop || 0;
       const delta = y - lastScrollY;
       if (Math.abs(delta) > 10) {
         if (delta > 0 && isPlayerPlaying()) setTowerCollapsed(true);
