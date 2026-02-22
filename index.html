@@ -63,11 +63,12 @@
 
     <section class="mt-4 bg-card/90 border border-slate-700 rounded-2xl p-3 sm:p-4 shadow-xl">
       <h2 class="text-base sm:text-lg font-semibold mb-3">全局顯示控制面板</h2>
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
         <button id="globalShowEnBtn" class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm sm:text-base">全部顯示英文</button>
         <button id="globalShowZhBtn" class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm sm:text-base">全部顯示中文</button>
         <button id="globalShowBothBtn" class="min-h-12 rounded-xl border border-cyan-300 bg-cyan-400 text-slate-900 px-4 py-3 text-sm sm:text-base font-semibold">全部顯示雙語</button>
         <button id="globalBlurBtn" class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm sm:text-base">全部模糊（盲聽）</button>
+        <button id="focusModeBtn" class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm sm:text-base">僅顯示當前句子</button>
       </div>
     </section>
 
@@ -120,6 +121,7 @@
       globalShowZhBtn: document.getElementById("globalShowZhBtn"),
       globalShowBothBtn: document.getElementById("globalShowBothBtn"),
       globalBlurBtn: document.getElementById("globalBlurBtn"),
+      focusModeBtn: document.getElementById("focusModeBtn"),
       manualDialog: document.getElementById("manualDialog"),
       manualDurationInput: document.getElementById("manualDurationInput"),
       manualEnInput: document.getElementById("manualEnInput"),
@@ -134,6 +136,7 @@
     let currentVideoId = "", countsByLine = {}, currentPlaybackRate = 1;
     let globalLangMode = "both";
     let globalBlurEnabled = false;
+    let focusModeEnabled = false;
 
     const FAIL_MSG = "自動抓取受限，請點擊下方按鈕手動貼入英/中雙語講稿以開始練習";
     const esc = (t) => String(t || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll("\"","&quot;").replaceAll("'","&#039;");
@@ -274,7 +277,7 @@
       } catch { return false; }
     }
     function saveUiState() {
-      const payload = { langMode: globalLangMode, blur: globalBlurEnabled };
+      const payload = { langMode: globalLangMode, blur: globalBlurEnabled, focus: focusModeEnabled };
       try { localStorage.setItem(uiStorageKey(), JSON.stringify(payload)); } catch {}
     }
     function loadUiState() {
@@ -282,6 +285,7 @@
         const s = JSON.parse(localStorage.getItem(uiStorageKey()) || "{}");
         if (s.langMode === "en" || s.langMode === "zh" || s.langMode === "both" || s.langMode === "custom") globalLangMode = s.langMode;
         if (typeof s.blur === "boolean") globalBlurEnabled = s.blur;
+        if (typeof s.focus === "boolean") focusModeEnabled = s.focus;
       } catch {}
     }
     function refreshGlobalButtons() {
@@ -291,6 +295,7 @@
       ui.globalShowZhBtn.className = globalLangMode === "zh" ? active : normal;
       ui.globalShowBothBtn.className = globalLangMode === "both" ? active : normal;
       ui.globalBlurBtn.className = globalBlurEnabled ? active : normal;
+      ui.focusModeBtn.className = focusModeEnabled ? active : normal;
     }
     function applyGlobalLang(mode) {
       globalLangMode = mode;
@@ -311,6 +316,12 @@
       saveUiState();
       refreshGlobalButtons();
     }
+    function setFocusMode(on) {
+      focusModeEnabled = Boolean(on);
+      saveUiState();
+      refreshGlobalButtons();
+      render();
+    }
 
     function inc(i) {
       const line = transcript[i];
@@ -322,12 +333,17 @@
       if (n) n.textContent = `${countsByLine[k]} 次`;
     }
     function findIdx(t) { for (let i = transcript.length - 1; i >= 0; i -= 1) if (t >= transcript[i].start) return i; return -1; }
+    function applyCurrentHighlight() {
+      document.querySelectorAll("[data-line]").forEach((r) => r.classList.remove("ring-2", "ring-cyan-400", "is-current"));
+      const row = document.querySelector(`[data-line="${currentLineIndex}"]`);
+      if (row) row.classList.add("ring-2", "ring-cyan-400", "is-current");
+    }
     function setCurrent(i) {
       currentLineIndex = i;
       ui.currentLineText.textContent = i >= 0 ? String(i + 1) : "-";
-      document.querySelectorAll("[data-line]").forEach((r) => r.classList.remove("ring-2", "ring-cyan-400", "is-current"));
-      const row = document.querySelector(`[data-line="${i}"]`);
-      if (row) row.classList.add("ring-2", "ring-cyan-400", "is-current");
+      if (focusModeEnabled) render();
+      else applyCurrentHighlight();
+      syncPlayPauseButtons();
     }
     function clearLoop() {
       activeLoop = null;
@@ -373,11 +389,23 @@
           ? "rate-btn min-h-12 px-4 rounded-xl border border-cyan-300 bg-cyan-400 text-slate-900 font-semibold"
           : "rate-btn min-h-12 px-4 rounded-xl border border-slate-600 bg-slate-800";
       });
+      if (focusModeEnabled) render();
+      else applyCurrentHighlight();
+    }
+    function isPlayerPlaying() { return Boolean(playerReady && player && player.getPlayerState && player.getPlayerState() === YT.PlayerState.PLAYING); }
+    function syncPlayPauseButtons() {
+      const playing = isPlayerPlaying();
+      document.querySelectorAll("[data-playpause-btn]").forEach((btn) => {
+        const i = Number(btn.getAttribute("data-playpause-btn"));
+        const isCurrent = i === currentLineIndex;
+        btn.textContent = isCurrent && playing ? "⏸️ 暫停" : "▶️ 播放";
+      });
     }
     function toggleLinePlayback(i) {
       if (!playerReady || !player || !transcript[i]) return;
       if (currentLineIndex !== i) {
         jumpTo(i, { increment: true });
+        syncPlayPauseButtons();
         return;
       }
       const state = player.getPlayerState ? player.getPlayerState() : -1;
@@ -388,22 +416,25 @@
         player.playVideo();
         setStatus("已繼續播放目前句。");
       }
+      syncPlayPauseButtons();
     }
     function render() {
       ui.transcriptList.innerHTML = "";
       ui.countText.textContent = String(transcript.length);
       if (!transcript.length) { ui.transcriptList.innerHTML = `<div class="rounded-xl border border-slate-700 bg-card p-4 text-slate-300">沒有可顯示的字幕。</div>`; return; }
       transcript.forEach((line, i) => {
+        if (focusModeEnabled && currentLineIndex >= 0 && i !== currentLineIndex) return;
         const count = Number(countsByLine[countKey(line)] || 0);
         const isCurrent = i === currentLineIndex;
         const enVisible = (line.showEn || isCurrent) && line.en;
         const zhVisible = (line.showZh || isCurrent) && line.zh;
         const enBlock = enVisible ? `<p class="subtitle-text text-left w-full rounded-xl border border-slate-600 bg-slate-900/70 px-4 py-3 text-base leading-relaxed text-slate-100">${esc(line.en)}</p>` : "";
         const zhBlock = zhVisible ? `<p class="subtitle-text text-left w-full rounded-xl border border-slate-700 bg-slate-800/70 px-4 py-3 text-base leading-relaxed text-sky-200">${esc(line.zh)}</p>` : "";
+        const playPauseLabel = isCurrent && isPlayerPlaying() ? "⏸️ 暫停" : "▶️ 播放";
         const row = document.createElement("div");
         row.className = "subtitle-row rounded-xl border border-slate-700 bg-line/70 p-3 sm:p-4";
         row.setAttribute("data-line", String(i));
-        row.innerHTML = `<div class="flex flex-col gap-3"><div class="flex flex-wrap items-center gap-2"><button data-jump-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl bg-cyan-400 text-slate-900 px-4 py-2 font-semibold text-base">${fmt(line.start)} 跳到這句</button><button data-loop-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl border border-slate-500 px-4 py-2 text-base">🔁 循環</button><button data-playpause-btn="${i}" class="min-h-12 rounded-xl border border-amber-400 text-amber-300 px-4 py-2 text-base">⏯ 播放/暫停</button><span data-count-label="${i}" class="px-3 py-2 rounded-xl border border-slate-500 text-sm text-slate-200">${count} 次</span><button data-toggle-en="${i}" class="min-h-10 rounded-lg border px-3 py-1 text-sm ${line.showEn ? "border-emerald-400 text-emerald-300" : "border-slate-500 text-slate-300"}">英</button><button data-toggle-zh="${i}" class="min-h-10 rounded-lg border px-3 py-1 text-sm ${line.showZh ? "border-sky-400 text-sky-300" : "border-slate-500 text-slate-300"}">中</button></div>${enBlock}${zhBlock}</div>`;
+        row.innerHTML = `<div class="flex flex-col gap-3"><div class="flex flex-wrap items-center gap-2"><button data-jump-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl bg-cyan-400 text-slate-900 px-4 py-2 font-semibold text-base">${fmt(line.start)} 跳到這句</button><button data-loop-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl border border-slate-500 px-4 py-2 text-base">🔁 循環</button><button data-playpause-btn="${i}" class="min-h-12 rounded-xl border border-amber-400 text-amber-300 px-4 py-2 text-base">${playPauseLabel}</button><span data-count-label="${i}" class="px-3 py-2 rounded-xl border border-slate-500 text-sm text-slate-200">${count} 次</span><button data-toggle-en="${i}" class="min-h-10 rounded-lg border px-3 py-1 text-sm ${line.showEn ? "border-emerald-400 text-emerald-300" : "border-slate-500 text-slate-300"}">英</button><button data-toggle-zh="${i}" class="min-h-10 rounded-lg border px-3 py-1 text-sm ${line.showZh ? "border-sky-400 text-sky-300" : "border-slate-500 text-slate-300"}">中</button></div>${enBlock}${zhBlock}</div>`;
         row.addEventListener("pointerdown", () => row.classList.add("force-reveal"));
         ["pointerup", "pointercancel", "pointerleave"].forEach((e) => row.addEventListener(e, () => row.classList.remove("force-reveal")));
         ui.transcriptList.appendChild(row);
@@ -433,7 +464,8 @@
         refreshGlobalButtons();
         render();
       }));
-      if (currentLineIndex >= 0) setCurrent(currentLineIndex);
+      applyCurrentHighlight();
+      syncPlayPauseButtons();
     }
 
     function tick() {
@@ -441,6 +473,7 @@
       const t = player.getCurrentTime();
       const i = findIdx(t);
       if (i >= 0 && i !== currentLineIndex) setCurrent(i);
+      syncPlayPauseButtons();
       if (!activeLoop && i >= 0) {
         const end = transcript[i].start + transcript[i].duration;
         if (t >= end - 0.05 && completeLockIndex !== i) { completeLockIndex = i; inc(i); }
@@ -507,6 +540,7 @@
     ui.globalShowZhBtn.addEventListener("click", () => applyGlobalLang("zh"));
     ui.globalShowBothBtn.addEventListener("click", () => applyGlobalLang("both"));
     ui.globalBlurBtn.addEventListener("click", () => setGlobalBlur(!globalBlurEnabled));
+    ui.focusModeBtn.addEventListener("click", () => setFocusMode(!focusModeEnabled));
     document.querySelectorAll("[data-rate-btn]").forEach((b) => b.addEventListener("click", () => setRate(Number(b.getAttribute("data-rate-btn")))));
     ui.urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") loadVideoAndTranscript(); });
     refreshGlobalButtons();
