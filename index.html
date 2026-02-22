@@ -1166,6 +1166,15 @@
         row.innerHTML = `<div class="subtitle-meta"><button data-action="jump" data-id="${line.id}" class="timestamp btn-secondary min-h-10 px-3 py-1.5 text-sm">${fmt(line.start)}</button><span data-count-label="${line.id}" class="text-xs text-slate-500">x ${count}</span></div><div class="subtitle-content flex flex-col gap-2">${zhBlock}${enBlock}</div><div class="subtitle-actions mt-2"><button data-action="play" data-id="${line.id}" class="btn-primary min-h-10 px-4 text-sm">${playPauseLabel}</button><button data-action="loop" data-id="${line.id}" class="btn-secondary min-h-10 px-4 text-sm">${state.loopIndex === line.id ? "↻ 取消" : "↻ 循環"}</button></div>`;
         ui.transcriptList.appendChild(row);
       });
+      if (state.currentIndex !== null) {
+        const activeCard = ui.transcriptList.querySelector(".subtitle-card.active");
+        if (activeCard) {
+          activeCard.scrollIntoView({
+            block: "center",
+            behavior: "auto"
+          });
+        }
+      }
       if (intentRevealIndex >= 0) setIntentReveal(intentRevealIndex);
       applyCurrentHighlight();
       syncPlayPauseButtons();

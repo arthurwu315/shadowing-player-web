@@ -72,6 +72,7 @@
 - 單一狀態來源：字幕、目前播放索引、循環目標、循環次數、主語速統一收斂於 `state` 物件。
 - 字幕識別改為 `data-id`：渲染與事件流使用穩定 `id`，不再依賴可漂移的 `index`。
 - 語言顯示狀態集中化：`state.displayMode`（`L1/L2/both`）控制字幕顯示，切換語言不影響播放索引。
+- 顯示切換滾動穩定：切換 `L1/L2/both` 後會自動回到當前播放句（置中、`behavior: auto`），不再跳回頂部。
 - 鍵盤快捷鍵：`Space` 播放/暫停、`←` 上一句、`→` 下一句、`R` 切換當前句循環。
 - 左側分層控制：Playback / Display / System 三區塊，操作路徑更清楚。
 - 主題切換（`🎨 風格`）：可循環切換 `暖系文青`（預設）/ `硬派像素` / `商業專業`，並記憶到 `localStorage`。
@@ -141,6 +142,10 @@
 
 ## 更新紀錄
 
+- 2026-02-22（顯示切換時滾動定位修復）
+  - `renderSubtitles()` 在渲染後，若存在 `state.currentIndex`，會自動定位 `.subtitle-card.active` 到可視區中央。
+  - 採用 `scrollIntoView({ block: "center", behavior: "auto" })`，避免切換語言時的平滑動畫干擾。
+  - 語言切換維持只更新 `state.displayMode` 並重新 render，不重設播放索引或播放狀態。
 - 2026-02-22（單句播放鍵失效修復）
   - `play` 事件保持傳遞 subtitle 物件（非 index），並統一走 `playSubtitle(subtitle)`。
   - `playSubtitle` 改為強制更新 `state.currentIndex`、必要時清除他句 loop、重繪 active 後 `seekTo + play`。
