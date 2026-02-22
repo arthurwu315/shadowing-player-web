@@ -141,6 +141,11 @@
 
 ## 更新紀錄
 
+- 2026-02-22（單句播放鍵失效修復）
+  - `play` 事件保持傳遞 subtitle 物件（非 index），並統一走 `playSubtitle(subtitle)`。
+  - `playSubtitle` 改為強制更新 `state.currentIndex`、必要時清除他句 loop、重繪 active 後 `seekTo + play`。
+  - `onSubtitleEnd` 加入 loop 防護：若 loop 指向非當前句，先清空 loop，避免覆蓋播放。
+  - 補 `PLAY CLICKED` 除錯 log（`subtitleId/currentIndex/loopIndex`）確認事件流與狀態同步。
 - 2026-02-22（語言切換 active 穩定修復）
   - 新增 `state.displayMode` 作為語言顯示唯一來源，支援 `L1/L2/both`。
   - 語言切換 handler 改為只更新 `displayMode` 並重新 render，不重設 `currentIndex/loopIndex`。

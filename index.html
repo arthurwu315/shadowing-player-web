@@ -1096,11 +1096,30 @@
       jumpTo(index, { increment: true });
     }
     function playSubtitle(subtitle) {
-      const index = findSubtitleIndexById(subtitle.id);
+      const index = state.subtitles.findIndex((s) => s.id === subtitle.id);
       if (index < 0) return;
+
+      // 更新目前播放句
       state.currentIndex = index;
-      if (state.loopIndex !== subtitle.id) state.loopIndex = null;
-      toggleLinePlayback(index);
+
+      // 如果正在 loop 其他句，取消 loop
+      if (state.loopIndex && state.loopIndex !== subtitle.id) {
+        state.loopIndex = null;
+      }
+
+      console.log("PLAY CLICKED:", {
+        subtitleId: subtitle.id,
+        currentIndex: state.currentIndex,
+        loopIndex: state.loopIndex
+      });
+
+      // 更新 UI
+      renderSubtitles();
+
+      // 播放
+      if (!playerReady || !player) return;
+      player.seekTo(subtitle.start, true);
+      player.playVideo();
     }
     function toggleLoop(subtitle) {
       const index = findSubtitleIndexById(subtitle.id);
@@ -1110,6 +1129,9 @@
       syncPlayPauseButtons();
     }
     function onSubtitleEnd() {
+      if (state.loopIndex && state.loopIndex !== state.subtitles[state.currentIndex]?.id) {
+        state.loopIndex = null;
+      }
       if (state.loopIndex) {
         const subtitle = findSubtitleById(state.loopIndex);
         if (subtitle) {
@@ -1281,19 +1303,20 @@
       const action = btn.dataset.action;
       const subtitle = findSubtitleById(id);
       if (!subtitle) return;
-      console.log({
-        action,
-        id,
-        currentIndex: state.currentIndex,
-        loopIndex: state.loopIndex
-      });
-      if (action === "jump") {
-        const idx = findSubtitleIndexById(id);
-        setIntentReveal(idx);
-        jumpToSubtitle(subtitle);
+      switch (action) {
+        case "jump": {
+          const idx = findSubtitleIndexById(id);
+          setIntentReveal(idx);
+          jumpToSubtitle(subtitle);
+          break;
+        }
+        case "play":
+          playSubtitle(subtitle);
+          break;
+        case "loop":
+          toggleLoop(subtitle);
+          break;
       }
-      if (action === "play") playSubtitle(subtitle);
-      if (action === "loop") toggleLoop(subtitle);
     });
     ui.historyToggleBtn.addEventListener("click", () => {
       if (isMobileLayout()) {
