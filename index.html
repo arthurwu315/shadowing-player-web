@@ -17,7 +17,7 @@
       color: #2B2D42 !important;
       font-family: "Noto Sans TC", "Segoe UI", sans-serif;
     }
-    .app-shell { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    #app-container { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
     .top-pane { flex: 0 0 auto; max-height: 60vh; overflow: auto; }
     .bottom-pane { flex: 1 1 auto; overflow-y: auto; min-height: 0; }
     .pixel-title, .count-badge { font-family: "VT323", monospace; letter-spacing: 0.03em; }
@@ -64,6 +64,7 @@
     }
     .control-panel { max-height: 999px; overflow: hidden; transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.2s ease; }
     .control-tower.compact .control-panel { max-height: 0; opacity: 0; margin: 0; border: 0 !important; box-shadow: none !important; }
+    .player-shell.player-hidden { display: none; }
     .tower-global-row {
       max-height: 74px;
       overflow-x: auto;
@@ -105,6 +106,7 @@
       box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2), 0 14px 34px rgba(59, 130, 246, 0.34);
       transform: scale(1.02);
       position: relative;
+      animation: border-breathe 2.4s ease-in-out infinite;
     }
     .subtitle-row.is-current::before {
       content: "";
@@ -115,6 +117,10 @@
       width: 5px;
       background: #3b82f6;
     }
+    @keyframes border-breathe {
+      0%, 100% { box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25), 0 10px 22px rgba(59, 130, 246, 0.22); }
+      50% { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4), 0 14px 30px rgba(59, 130, 246, 0.35); }
+    }
     .bottom-pane::-webkit-scrollbar { width: 10px; }
     .bottom-pane::-webkit-scrollbar-track { background: #d9d9d9; border-left: 2px solid #000; }
     .bottom-pane::-webkit-scrollbar-thumb { background: #2f2f2f; border: 2px solid #000; }
@@ -123,6 +129,19 @@
       .top-pane { max-height: 50vh; }
       .top-pane-inner { max-width: 1100px; margin: 0 auto; width: 100%; }
       #transcriptList { max-width: 56rem; margin: 0 auto; }
+      #app-container {
+        display: grid !important;
+        grid-template-columns: minmax(360px, 42vw) 1fr;
+        grid-template-rows: 100vh;
+      }
+      .top-pane {
+        max-height: none;
+        height: 100vh;
+        border-right: 2px solid #000;
+      }
+      .bottom-pane {
+        height: 100vh;
+      }
     }
     @media (orientation: landscape) and (max-height: 560px) {
       #controlTower { padding: 0.4rem !important; }
@@ -156,7 +175,7 @@
     </section>
 
     <section id="controlTower" class="control-tower mt-4 sm:mt-6 rounded-2xl p-3 sm:p-4">
-      <div class="bg-card/70 border border-slate-700 rounded-2xl p-2 sm:p-3">
+      <div id="playerShell" class="player-shell bg-card/70 border border-slate-700 rounded-2xl p-2 sm:p-3">
         <div class="aspect-video w-full rounded-xl overflow-hidden bg-black"><div id="player" class="w-full h-full"></div></div>
       </div>
       <div id="controlPanel" class="control-panel mt-2 bg-card/70 border border-slate-700 rounded-2xl p-2 sm:p-3">
@@ -192,6 +211,7 @@
           <button id="globalShowBothBtn" class="pill-btn">🌐 雙語</button>
           <button id="globalBlurBtn" class="pill-btn">🕶️ 盲聽</button>
           <button id="focusModeBtn" class="pill-btn">🎯 聚焦</button>
+          <button id="hidePlayerBtn" class="pill-btn">🎬 隱藏播放器</button>
           <button id="lineRateResetBtn" class="pill-btn">⏩ 下一句回 1x</button>
         </div>
       </div>
@@ -208,17 +228,17 @@
 
   <dialog id="manualDialog" class="w-[96%] max-w-4xl rounded-2xl bg-slate-900 text-slate-100 border border-slate-700 p-0">
     <div class="p-4 sm:p-5">
-      <h3 class="text-lg font-semibold">手動貼上雙語字幕</h3>
-      <p class="text-sm text-slate-300 mt-1">若兩邊有時間戳記會自動按時間配對；若純文字會按行數配對。</p>
+      <h3 class="text-lg font-semibold">手動貼上雙語字幕（任意語言）</h3>
+      <p class="text-sm text-slate-300 mt-1">兩欄可貼入任意語言；若兩邊有時間戳記會按時間配對，純文字則按行數對齊。</p>
       <label for="manualDurationInput" class="block text-sm text-slate-300 mt-4 mb-2">純文字模式每句秒數</label>
       <input id="manualDurationInput" type="number" step="0.1" min="0.5" value="2.5" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3 py-3 text-base" />
       <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-3">
         <div>
-          <label for="manualEnInput" class="block text-sm text-slate-300 mb-2">英文講稿</label>
+          <label for="manualEnInput" class="block text-sm text-slate-300 mb-2">稿件 A（L1）</label>
           <textarea id="manualEnInput" rows="12" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3 py-3 text-sm" placeholder="0:03&#10;Hello&#10;0:08&#10;How are you?"></textarea>
         </div>
         <div>
-          <label for="manualZhInput" class="block text-sm text-slate-300 mb-2">中文翻譯</label>
+          <label for="manualZhInput" class="block text-sm text-slate-300 mb-2">稿件 B（L2）</label>
           <textarea id="manualZhInput" rows="12" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3 py-3 text-sm" placeholder="0:03&#10;哈囉&#10;0:08&#10;你最近好嗎？"></textarea>
         </div>
       </div>
@@ -250,10 +270,12 @@
       globalShowBothBtn: document.getElementById("globalShowBothBtn"),
       globalBlurBtn: document.getElementById("globalBlurBtn"),
       focusModeBtn: document.getElementById("focusModeBtn"),
+      hidePlayerBtn: document.getElementById("hidePlayerBtn"),
       lineRateResetBtn: document.getElementById("lineRateResetBtn"),
       controlTower: document.getElementById("controlTower"),
       controlPanel: document.getElementById("controlPanel"),
       transcriptSection: document.getElementById("transcriptSection"),
+      playerShell: document.getElementById("playerShell"),
       manualDialog: document.getElementById("manualDialog"),
       manualDurationInput: document.getElementById("manualDurationInput"),
       manualEnInput: document.getElementById("manualEnInput"),
@@ -275,6 +297,9 @@
     let lineRateOverrideActive = false;
     let towerCollapsed = false;
     let lastScrollY = 0;
+    let playerHidden = false;
+    let trackLabelA = "L1";
+    let trackLabelB = "L2";
 
     const FAIL_MSG = "自動抓取受限，請點擊下方按鈕手動貼入英/中雙語講稿以開始練習";
     const esc = (t) => String(t || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll("\"","&quot;").replaceAll("'","&#039;");
@@ -428,7 +453,8 @@
         blur: globalBlurEnabled,
         focus: focusModeEnabled,
         autoResetLineRate,
-        preferredSlowRate
+        preferredSlowRate,
+        playerHidden
       };
       try { localStorage.setItem(uiStorageKey(), JSON.stringify(payload)); } catch {}
     }
@@ -440,7 +466,24 @@
         if (typeof s.focus === "boolean") focusModeEnabled = s.focus;
         if (typeof s.autoResetLineRate === "boolean") autoResetLineRate = s.autoResetLineRate;
         if (Number(s.preferredSlowRate) > 0) preferredSlowRate = Number(s.preferredSlowRate);
+        if (typeof s.playerHidden === "boolean") playerHidden = s.playerHidden;
       } catch {}
+    }
+    function detectTrackLabel(sample, fallback) {
+      const text = String(sample || "");
+      if (!text) return fallback;
+      const cjk = (text.match(/[\u4e00-\u9fff]/g) || []).length;
+      const latin = (text.match(/[A-Za-z]/g) || []).length;
+      if (cjk > latin * 0.6) return "CN";
+      if (latin > cjk) return "EN";
+      return fallback;
+    }
+    function updateTrackLabels() {
+      const sampleA = transcript.find((x) => x.en)?.en || "";
+      const sampleB = transcript.find((x) => x.zh)?.zh || "";
+      trackLabelA = detectTrackLabel(sampleA, "L1");
+      trackLabelB = detectTrackLabel(sampleB, "L2");
+      if (trackLabelA === trackLabelB) { trackLabelA = "L1"; trackLabelB = "L2"; }
     }
     function refreshGlobalButtons() {
       const active = "pill-btn border-cyan-300 bg-cyan-400 text-slate-900 font-semibold";
@@ -450,7 +493,12 @@
       ui.globalShowBothBtn.className = globalLangMode === "both" ? active : normal;
       ui.globalBlurBtn.className = globalBlurEnabled ? active : normal;
       ui.focusModeBtn.className = focusModeEnabled ? active : normal;
+      ui.hidePlayerBtn.className = playerHidden ? active : normal;
       ui.lineRateResetBtn.className = autoResetLineRate ? active : normal;
+      ui.globalShowEnBtn.textContent = `🅰️ ${trackLabelA}`;
+      ui.globalShowZhBtn.textContent = `🅱️ ${trackLabelB}`;
+      ui.globalShowBothBtn.textContent = `🌐 ${trackLabelA}+${trackLabelB}`;
+      ui.hidePlayerBtn.textContent = playerHidden ? "🎬 顯示播放器" : "🎬 隱藏播放器";
       ui.lineRateResetBtn.textContent = autoResetLineRate ? "⏩ 下一句回 1x：開" : "⏩ 下一句回 1x：關";
     }
     function setTowerCollapsed(collapsed) {
@@ -487,6 +535,13 @@
     function setAutoResetLineRate(on) {
       autoResetLineRate = Boolean(on);
       if (!autoResetLineRate) lineRateOverrideActive = false;
+      saveUiState();
+      refreshGlobalButtons();
+    }
+    function setPlayerHidden(on) {
+      playerHidden = Boolean(on);
+      if (playerHidden) ui.playerShell.classList.add("player-hidden");
+      else ui.playerShell.classList.remove("player-hidden");
       saveUiState();
       refreshGlobalButtons();
     }
@@ -636,7 +691,7 @@
         const row = document.createElement("div");
         row.className = `subtitle-row rounded-xl border border-slate-700 bg-line/70 p-3 sm:p-4${hiddenClass}`;
         row.setAttribute("data-line", String(i));
-        row.innerHTML = `<div class="flex flex-col gap-3"><div class="flex flex-wrap items-center gap-2"><button data-jump-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl bg-cyan-400 text-slate-900 px-4 py-2 font-semibold text-base">${fmt(line.start)} 跳到這句</button><button data-loop-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl border border-slate-500 px-4 py-2 text-base">🔁 循環</button><button data-playpause-btn="${i}" class="min-h-12 rounded-xl border border-amber-400 text-amber-300 px-4 py-2 text-base">${playPauseLabel}</button><button data-line-rate="${i}" data-line-rate-value="${preferredSlowRate}" class="min-h-10 rounded-lg border border-violet-400 text-violet-300 px-3 py-1 text-sm">${preferredSlowRate}x</button><button data-line-rate="${i}" data-line-rate-value="1" class="min-h-10 rounded-lg border border-violet-400 text-violet-300 px-3 py-1 text-sm">1x</button><span data-count-label="${i}" class="count-badge h-9 min-w-9 px-2 rounded-full border border-slate-500 bg-slate-900 text-sm text-slate-100 inline-flex items-center justify-center font-semibold">${count}</span><button data-toggle-en="${i}" class="min-h-10 rounded-lg border px-3 py-1 text-sm ${line.showEn ? "border-emerald-400 text-emerald-300" : "border-slate-500 text-slate-300"}">英</button><button data-toggle-zh="${i}" class="min-h-10 rounded-lg border px-3 py-1 text-sm ${line.showZh ? "border-sky-400 text-sky-300" : "border-slate-500 text-slate-300"}">中</button></div>${enBlock}${zhBlock}</div>`;
+        row.innerHTML = `<div class="flex flex-col gap-3"><div class="flex flex-wrap items-center gap-2"><button data-jump-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl bg-cyan-400 text-slate-900 px-4 py-2 font-semibold text-base">${fmt(line.start)} 跳到這句</button><button data-loop-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl border border-slate-500 px-4 py-2 text-base">🔁 循環</button><button data-playpause-btn="${i}" class="min-h-12 rounded-xl border border-amber-400 text-amber-300 px-4 py-2 text-base">${playPauseLabel}</button><button data-line-rate="${i}" data-line-rate-value="${preferredSlowRate}" class="min-h-10 rounded-lg border border-violet-400 text-violet-300 px-3 py-1 text-sm">${preferredSlowRate}x</button><button data-line-rate="${i}" data-line-rate-value="1" class="min-h-10 rounded-lg border border-violet-400 text-violet-300 px-3 py-1 text-sm">1x</button><span data-count-label="${i}" class="count-badge h-9 min-w-9 px-2 rounded-full border border-slate-500 bg-slate-900 text-sm text-slate-100 inline-flex items-center justify-center font-semibold">${count}</span><button data-toggle-en="${i}" class="min-h-10 rounded-lg border px-3 py-1 text-sm ${line.showEn ? "border-emerald-400 text-emerald-300" : "border-slate-500 text-slate-300"}">${trackLabelA}</button><button data-toggle-zh="${i}" class="min-h-10 rounded-lg border px-3 py-1 text-sm ${line.showZh ? "border-sky-400 text-sky-300" : "border-slate-500 text-slate-300"}">${trackLabelB}</button></div>${enBlock}${zhBlock}</div>`;
         row.addEventListener("pointerdown", () => row.classList.add("force-reveal"));
         ["pointerup", "pointercancel", "pointerleave"].forEach((e) => row.addEventListener(e, () => row.classList.remove("force-reveal")));
         ui.transcriptList.appendChild(row);
@@ -715,6 +770,7 @@
       const aligned = alignBilingual(enParsed, zhParsed, sec);
       if (!aligned.length) return setStatus("手動字幕格式無法解析，請檢查內容。", true);
       transcript = aligned;
+      updateTrackLabels();
       clearLoop(); clearAutoPause(); completeLockIndex = null; currentLineIndex = -1;
       loadCounts(); saveBilingual(); render(); setRate(currentPlaybackRate); setStatus("已套用雙語字幕。");
     }
@@ -730,12 +786,13 @@
       ensurePlayer(videoId);
       loadUiState();
       syncTranscriptOffset();
+      setPlayerHidden(playerHidden);
       refreshGlobalButtons();
       setGlobalBlur(globalBlurEnabled);
       clearLoop(); clearAutoPause(); completeLockIndex = null; currentLineIndex = -1;
-      if (loadBilingual()) { loadCounts(); render(); setRate(currentPlaybackRate); setStatus("已回復此影片的雙語字幕與顯示設定。"); return; }
+      if (loadBilingual()) { updateTrackLabels(); loadCounts(); render(); setRate(currentPlaybackRate); setStatus("已回復此影片的雙語字幕與顯示設定。"); return; }
       setStatus("正在載入字幕...");
-      try { transcript = await fetchTranscript(videoUrl, videoId); loadCounts(); saveBilingual(); render(); setRate(currentPlaybackRate); setStatus("字幕載入成功。"); }
+      try { transcript = await fetchTranscript(videoUrl, videoId); updateTrackLabels(); loadCounts(); saveBilingual(); render(); setRate(currentPlaybackRate); setStatus("字幕載入成功。"); }
       catch { transcript = []; render(); setStatus(FAIL_MSG, true); alert(FAIL_MSG); }
     }
 
@@ -754,6 +811,7 @@
     ui.globalShowBothBtn.addEventListener("click", () => applyGlobalLang("both"));
     ui.globalBlurBtn.addEventListener("click", () => setGlobalBlur(!globalBlurEnabled));
     ui.focusModeBtn.addEventListener("click", () => setFocusMode(!focusModeEnabled));
+    ui.hidePlayerBtn.addEventListener("click", () => setPlayerHidden(!playerHidden));
     ui.lineRateResetBtn.addEventListener("click", () => setAutoResetLineRate(!autoResetLineRate));
     document.querySelectorAll("[data-rate-btn]").forEach((b) => b.addEventListener("click", () => setRate(Number(b.getAttribute("data-rate-btn")))));
     ui.urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") loadVideoAndTranscript(); });
