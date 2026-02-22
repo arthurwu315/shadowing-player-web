@@ -18,8 +18,8 @@
       font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans", "Noto Sans TC", "Noto Sans JP", "Noto Sans KR", sans-serif;
     }
     #app-container { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    .top-pane { flex: 0 0 auto; max-height: 60vh; overflow: auto; }
-    .bottom-pane { flex: 1 1 auto; overflow-y: auto; min-height: 0; }
+    .top-pane { flex: 0 0 auto; max-height: 60vh; overflow: auto; position: relative; z-index: 2; }
+    .bottom-pane { flex: 1 1 auto; overflow-y: auto; min-height: 0; position: relative; z-index: 1; }
     .pixel-title, .count-badge { font-family: "VT323", monospace; letter-spacing: 0.03em; }
     section, dialog, .subtitle-row, button, .pill-btn, input, textarea, label {
       border-radius: 0 !important;
@@ -66,11 +66,11 @@
     .control-tower.compact .control-panel { max-height: 0; opacity: 0; margin: 0; border: 0 !important; box-shadow: none !important; }
     .player-shell.player-hidden { display: none; }
     .tower-global-row {
-      max-height: 74px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      white-space: nowrap;
+      max-height: none;
+      overflow: visible;
+      white-space: normal;
       align-items: center;
+      flex-wrap: wrap;
     }
     .pixel-group {
       border: 2px solid #000;
@@ -92,6 +92,15 @@
       align-items: center;
       gap: 0.35rem;
       box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 1);
+      border-radius: 6px !important;
+    }
+    .history-card-title {
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #2b2d42;
+      font-weight: 700;
     }
     @media (max-width: 640px) { .control-panel { max-height: 80px; overflow: auto; } }
     .pill-btn {
@@ -115,7 +124,7 @@
       box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2), 0 14px 34px rgba(59, 130, 246, 0.34);
       transform: scale(1.02);
       position: relative;
-      animation: border-breathe 2.4s ease-in-out infinite;
+      animation: border-breathe 2.4s ease-in-out infinite, active-bg-pulse 2.6s ease-in-out infinite;
     }
     .subtitle-row.is-current::before {
       content: "";
@@ -130,27 +139,35 @@
       0%, 100% { box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25), 0 10px 22px rgba(59, 130, 246, 0.22); }
       50% { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4), 0 14px 30px rgba(59, 130, 246, 0.35); }
     }
+    @keyframes active-bg-pulse {
+      0%, 100% { background: rgba(255, 221, 210, 0.5); }
+      50% { background: rgba(255, 221, 210, 0.72); }
+    }
     .bottom-pane::-webkit-scrollbar { width: 10px; }
     .bottom-pane::-webkit-scrollbar-track { background: #d9d9d9; border-left: 2px solid #000; }
     .bottom-pane::-webkit-scrollbar-thumb { background: #2f2f2f; border: 2px solid #000; }
     .bottom-pane { scrollbar-color: #2f2f2f #d9d9d9; scrollbar-width: thin; }
+    .text-slate-300, .text-slate-500, #status { color: #4a4a4a !important; }
     @media (min-width: 1280px) {
-      .top-pane { max-height: 50vh; }
-      .top-pane-inner { max-width: 1100px; margin: 0 auto; width: 100%; }
+      .top-pane { max-height: 100vh; height: 100vh; }
+      .top-pane-inner { max-width: none; margin: 0 auto; width: 100%; }
       #transcriptList { max-width: 56rem; margin: 0 auto; }
       #app-container {
         display: grid !important;
-        grid-template-columns: minmax(360px, 42vw) 1fr;
+        grid-template-columns: clamp(360px, 35vw, 420px) 1fr;
         grid-template-rows: 100vh;
       }
       .top-pane {
-        max-height: none;
-        height: 100vh;
         border-right: 2px solid #000;
       }
       .bottom-pane {
         height: 100vh;
       }
+      #toggleSidebarBtn { display: inline-flex !important; }
+      #showSidebarBtn { display: none; }
+      #app-container.sidebar-hidden { grid-template-columns: 0 1fr; }
+      #app-container.sidebar-hidden .top-pane { display: none; }
+      #app-container.sidebar-hidden #showSidebarBtn { display: inline-flex; }
     }
     @media (orientation: landscape) and (max-height: 560px) {
       #controlTower { padding: 0.4rem !important; }
@@ -179,13 +196,6 @@
       </div>
       <div class="mt-3">
         <button id="manualOpenBtn" class="w-full sm:w-auto min-h-12 rounded-xl border border-cyan-400 text-cyan-300 px-4 py-2 hover:bg-cyan-500/10">手動貼上雙語字幕</button>
-      </div>
-      <div class="mt-3 border-t border-slate-600/50 pt-3">
-        <div class="flex items-center justify-between gap-2">
-          <h3 class="text-base font-semibold">最近練習</h3>
-          <button id="clearRecentBtn" class="min-h-10 rounded-xl border border-rose-500 px-3 py-1 text-sm">刪除紀錄</button>
-        </div>
-        <div id="recentVideos" class="mt-2 flex flex-wrap gap-2"></div>
       </div>
       <p id="status" class="mt-3 text-sm text-slate-300">尚未載入影片</p>
     </section>
@@ -229,8 +239,17 @@
           <button id="focusModeBtn" class="pill-btn">🎯 聚焦</button>
           <button id="hidePlayerBtn" class="pill-btn">🎬 隱藏播放器</button>
           <button id="lineRateResetBtn" class="pill-btn">⏩ 下一句回 1x</button>
-          <button id="resetCountsBtn" class="pill-btn">🧹 重設計數</button>
+          <button id="resetCountsBtn" class="pill-btn">🗑️ 重設本片所有紀錄</button>
+          <button id="toggleSidebarBtn" class="pill-btn hidden">🧭 隱藏左側</button>
         </div>
+      </div>
+
+      <div id="historyLibrary" class="control-panel mt-2 border-t border-slate-600/50 pt-2 pixel-group-accent">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="text-base font-semibold">最近練習庫</h3>
+          <button id="clearRecentBtn" class="min-h-10 rounded-xl border border-rose-500 px-3 py-1 text-sm">刪除紀錄</button>
+        </div>
+        <div id="recentVideos" class="mt-2 flex flex-wrap gap-2"></div>
       </div>
     </section>
 
@@ -238,6 +257,9 @@
     </div>
 
     <section id="transcriptSection" class="bottom-pane flex-1 overflow-y-auto px-4 pb-4 pt-3">
+      <div class="mb-2">
+        <button id="showSidebarBtn" class="pill-btn hidden">🧭 顯示左側儀表板</button>
+      </div>
       <h2 class="text-lg sm:text-xl font-semibold mb-3">所有字幕行</h2>
       <div id="transcriptList" class="space-y-2"></div>
     </section>
@@ -292,8 +314,11 @@
       hidePlayerBtn: document.getElementById("hidePlayerBtn"),
       lineRateResetBtn: document.getElementById("lineRateResetBtn"),
       resetCountsBtn: document.getElementById("resetCountsBtn"),
+      toggleSidebarBtn: document.getElementById("toggleSidebarBtn"),
+      showSidebarBtn: document.getElementById("showSidebarBtn"),
       controlTower: document.getElementById("controlTower"),
       controlPanel: document.getElementById("controlPanel"),
+      appContainer: document.getElementById("app-container"),
       transcriptSection: document.getElementById("transcriptSection"),
       playerShell: document.getElementById("playerShell"),
       manualDialog: document.getElementById("manualDialog"),
@@ -318,6 +343,7 @@
     let towerCollapsed = false;
     let lastScrollY = 0;
     let playerHidden = false;
+    let sidebarHidden = false;
     const trackLabelA = "L1";
     const trackLabelB = "L2";
     let recentVideos = [];
@@ -460,21 +486,40 @@
     function loadRecentVideos() {
       try {
         const raw = JSON.parse(localStorage.getItem(recentVideosKey) || "[]");
-        recentVideos = Array.isArray(raw) ? raw.filter((x) => typeof x === "string" && x) : [];
+        if (!Array.isArray(raw)) recentVideos = [];
+        else recentVideos = raw.map((x) => {
+          if (typeof x === "string") return { id: x, title: "", updatedAt: Date.now() };
+          if (x && typeof x.id === "string") return {
+            id: x.id,
+            title: typeof x.title === "string" ? x.title : "",
+            updatedAt: Number(x.updatedAt || Date.now())
+          };
+          return null;
+        }).filter(Boolean);
       } catch { recentVideos = []; }
     }
     function saveRecentVideos() {
       try { localStorage.setItem(recentVideosKey, JSON.stringify(recentVideos.slice(0, 12))); } catch {}
     }
-    function touchRecentVideo(videoId) {
-      recentVideos = [videoId, ...recentVideos.filter((x) => x !== videoId)].slice(0, 12);
+    function touchRecentVideo(videoId, title = "") {
+      const entry = { id: videoId, title: title || "", updatedAt: Date.now() };
+      recentVideos = [entry, ...recentVideos.filter((x) => x.id !== videoId)].slice(0, 12);
       saveRecentVideos();
       renderRecentVideos();
     }
     function removeRecentVideo(videoId) {
-      recentVideos = recentVideos.filter((x) => x !== videoId);
+      recentVideos = recentVideos.filter((x) => x.id !== videoId);
       saveRecentVideos();
       renderRecentVideos();
+    }
+    async function fetchVideoTitleById(videoId) {
+      try {
+        const url = `https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}&format=json`;
+        const res = await fetch(url);
+        if (!res.ok) return "";
+        const data = await res.json();
+        return String(data.title || "").trim();
+      } catch { return ""; }
     }
     function renderRecentVideos() {
       ui.recentVideos.innerHTML = "";
@@ -482,10 +527,12 @@
         ui.recentVideos.innerHTML = `<span class="text-sm text-slate-500">尚無練習紀錄</span>`;
         return;
       }
-      recentVideos.forEach((id) => {
+      recentVideos.forEach((item, idx) => {
+        const id = item.id;
+        const shortTitle = item.title ? item.title.slice(0, 26) : `影片 ${idx + 1}`;
         const wrap = document.createElement("div");
         wrap.className = "recent-chip";
-        wrap.innerHTML = `<button data-recent-load="${id}" class="px-2 py-1 text-sm">${id}</button><button data-recent-delete="${id}" class="px-2 py-1 text-sm">刪除</button>`;
+        wrap.innerHTML = `<button data-recent-load="${id}" class="px-2 py-1 text-sm"><span class="history-card-title">${esc(shortTitle)}</span></button><button data-recent-delete="${id}" class="px-2 py-1 text-sm text-rose-700">✕</button>`;
         ui.recentVideos.appendChild(wrap);
       });
       document.querySelectorAll("[data-recent-load]").forEach((btn) => btn.addEventListener("click", () => {
@@ -518,7 +565,8 @@
         focus: focusModeEnabled,
         autoResetLineRate,
         preferredSlowRate,
-        playerHidden
+        playerHidden,
+        sidebarHidden
       };
       try { localStorage.setItem(uiStorageKey(), JSON.stringify(payload)); } catch {}
     }
@@ -531,9 +579,11 @@
         if (typeof s.autoResetLineRate === "boolean") autoResetLineRate = s.autoResetLineRate;
         if (Number(s.preferredSlowRate) > 0) preferredSlowRate = Number(s.preferredSlowRate);
         if (typeof s.playerHidden === "boolean") playerHidden = s.playerHidden;
+        if (typeof s.sidebarHidden === "boolean") sidebarHidden = s.sidebarHidden;
       } catch {}
     }
     function updateTrackLabels() { return; }
+    function renderSubtitles() { render(); }
     function refreshGlobalButtons() {
       const active = "pill-btn border-cyan-300 bg-cyan-400 text-slate-900 font-semibold";
       const normal = "pill-btn border-slate-600 bg-slate-800";
@@ -548,6 +598,7 @@
       ui.globalShowZhBtn.textContent = `🅱️ ${trackLabelB}`;
       ui.globalShowBothBtn.textContent = `🌐 ${trackLabelA}+${trackLabelB}`;
       ui.hidePlayerBtn.textContent = playerHidden ? "🎬 顯示播放器" : "🎬 隱藏播放器";
+      ui.toggleSidebarBtn.textContent = sidebarHidden ? "🧭 顯示左側" : "🧭 隱藏左側";
       ui.lineRateResetBtn.textContent = autoResetLineRate ? "⏩ 下一句回 1x：開" : "⏩ 下一句回 1x：關";
     }
     function setTowerCollapsed(collapsed) {
@@ -591,6 +642,13 @@
       playerHidden = Boolean(on);
       if (playerHidden) ui.playerShell.classList.add("player-hidden");
       else ui.playerShell.classList.remove("player-hidden");
+      saveUiState();
+      refreshGlobalButtons();
+    }
+    function setSidebarHidden(on) {
+      sidebarHidden = Boolean(on);
+      if (sidebarHidden) ui.appContainer.classList.add("sidebar-hidden");
+      else ui.appContainer.classList.remove("sidebar-hidden");
       saveUiState();
       refreshGlobalButtons();
     }
@@ -840,18 +898,20 @@
       const videoUrl = raw.startsWith("http") ? raw : `https://www.youtube.com/watch?v=${videoId}`;
       currentVideoId = videoId;
       ui.videoIdText.textContent = videoId;
-      touchRecentVideo(videoId);
+      const fetchedTitle = await fetchVideoTitleById(videoId);
+      touchRecentVideo(videoId, fetchedTitle);
       ensurePlayer(videoId);
       loadUiState();
       syncTranscriptOffset();
       setPlayerHidden(playerHidden);
+      setSidebarHidden(sidebarHidden);
       refreshGlobalButtons();
       setGlobalBlur(globalBlurEnabled);
       clearLoop(); clearAutoPause(); completeLockIndex = null; currentLineIndex = -1;
-      if (loadBilingual()) { updateTrackLabels(); loadCounts(); render(); setRate(currentPlaybackRate); setStatus("已回復此影片的雙語字幕與顯示設定。"); return; }
+      if (loadBilingual()) { updateTrackLabels(); loadCounts(); renderSubtitles(); setRate(currentPlaybackRate); setStatus("已回復此影片的雙語字幕與顯示設定。"); return; }
       setStatus("正在載入字幕...");
-      try { transcript = await fetchTranscript(videoUrl, videoId); updateTrackLabels(); loadCounts(); saveBilingual(); render(); setRate(currentPlaybackRate); setStatus("字幕載入成功。"); }
-      catch { transcript = []; render(); setStatus(FAIL_MSG, true); alert(FAIL_MSG); }
+      try { transcript = await fetchTranscript(videoUrl, videoId); updateTrackLabels(); loadCounts(); saveBilingual(); renderSubtitles(); setRate(currentPlaybackRate); setStatus("字幕載入成功。"); }
+      catch { transcript = []; renderSubtitles(); setStatus(FAIL_MSG, true); alert(FAIL_MSG); }
     }
 
     window.onYouTubeIframeAPIReady = () => { playerReady = true; clearInterval(tickTimer); tickTimer = setInterval(tick, 100); setRate(currentPlaybackRate); };
@@ -870,6 +930,8 @@
     ui.globalBlurBtn.addEventListener("click", () => setGlobalBlur(!globalBlurEnabled));
     ui.focusModeBtn.addEventListener("click", () => setFocusMode(!focusModeEnabled));
     ui.hidePlayerBtn.addEventListener("click", () => setPlayerHidden(!playerHidden));
+    ui.toggleSidebarBtn.addEventListener("click", () => setSidebarHidden(!sidebarHidden));
+    ui.showSidebarBtn.addEventListener("click", () => setSidebarHidden(false));
     ui.lineRateResetBtn.addEventListener("click", () => setAutoResetLineRate(!autoResetLineRate));
     ui.resetCountsBtn.addEventListener("click", resetCurrentVideoCounts);
     ui.clearRecentBtn.addEventListener("click", () => {
@@ -891,6 +953,7 @@
     }, { passive: true });
     loadRecentVideos();
     renderRecentVideos();
+    setSidebarHidden(sidebarHidden);
     window.addEventListener("resize", syncTranscriptOffset);
     if (window.visualViewport) window.visualViewport.addEventListener("resize", syncTranscriptOffset);
     syncTranscriptOffset();
