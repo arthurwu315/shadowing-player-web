@@ -10,11 +10,17 @@
   </script>
   <style>
     .safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+    button { transition: transform 120ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease; }
+    button:active { transform: scale(0.96); }
     .global-blur .subtitle-text { filter: blur(5px); opacity: 0.82; }
     .global-blur .subtitle-row.is-current .subtitle-text,
     .global-blur .subtitle-row:hover .subtitle-text,
     .global-blur .subtitle-row.force-reveal .subtitle-text,
     .global-blur .subtitle-row:focus-within .subtitle-text { filter: none; opacity: 1; }
+    .subtitle-row.is-current {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.25), 0 8px 28px rgba(56, 189, 248, 0.2);
+    }
   </style>
 </head>
 <body class="bg-bg text-slate-100 min-h-screen">
@@ -63,12 +69,13 @@
 
     <section class="mt-4 bg-card/90 border border-slate-700 rounded-2xl p-3 sm:p-4 shadow-xl">
       <h2 class="text-base sm:text-lg font-semibold mb-3">全局顯示控制面板</h2>
-      <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+      <div class="grid grid-cols-2 sm:grid-cols-6 gap-2">
         <button id="globalShowEnBtn" class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm sm:text-base">全部顯示英文</button>
         <button id="globalShowZhBtn" class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm sm:text-base">全部顯示中文</button>
         <button id="globalShowBothBtn" class="min-h-12 rounded-xl border border-cyan-300 bg-cyan-400 text-slate-900 px-4 py-3 text-sm sm:text-base font-semibold">全部顯示雙語</button>
         <button id="globalBlurBtn" class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm sm:text-base">全部模糊（盲聽）</button>
         <button id="focusModeBtn" class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm sm:text-base">僅顯示當前句子</button>
+        <button id="lineRateResetBtn" class="min-h-12 rounded-xl border border-cyan-300 bg-cyan-400 text-slate-900 px-4 py-3 text-sm sm:text-base font-semibold">跳下一句回 1x：開</button>
       </div>
     </section>
 
@@ -122,6 +129,7 @@
       globalShowBothBtn: document.getElementById("globalShowBothBtn"),
       globalBlurBtn: document.getElementById("globalBlurBtn"),
       focusModeBtn: document.getElementById("focusModeBtn"),
+      lineRateResetBtn: document.getElementById("lineRateResetBtn"),
       manualDialog: document.getElementById("manualDialog"),
       manualDurationInput: document.getElementById("manualDurationInput"),
       manualEnInput: document.getElementById("manualEnInput"),
@@ -137,6 +145,10 @@
     let globalLangMode = "both";
     let globalBlurEnabled = false;
     let focusModeEnabled = false;
+    let autoResetLineRate = true;
+    let preferredSlowRate = 0.7;
+    let lineRateOverrideFrom = -1;
+    let lineRateOverrideActive = false;
 
     const FAIL_MSG = "自動抓取受限，請點擊下方按鈕手動貼入英/中雙語講稿以開始練習";
     const esc = (t) => String(t || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll("\"","&quot;").replaceAll("'","&#039;");
@@ -260,7 +272,15 @@
       throw new Error("providers failed");
     }
 
-    function ensurePlayer(videoId) { if (!player) player = new YT.Player("player", { videoId, playerVars: { rel: 0, playsinline: 1 } }); else player.loadVideoById(videoId); }
+    function ensurePlayer(videoId) {
+      if (!player) {
+        player = new YT.Player("player", {
+          videoId,
+          playerVars: { rel: 0, playsinline: 1 },
+          events: { onStateChange: () => syncPlayPauseButtons() }
+        });
+      } else player.loadVideoById(videoId);
+    }
     function loadCounts() { try { countsByLine = JSON.parse(localStorage.getItem(countStorageKey()) || "{}") || {}; } catch { countsByLine = {}; } }
     function saveCounts() { try { localStorage.setItem(countStorageKey(), JSON.stringify(countsByLine)); } catch {} }
     function saveBilingual() { try { localStorage.setItem(biStorageKey(), JSON.stringify(transcript)); } catch {} }
@@ -277,7 +297,13 @@
       } catch { return false; }
     }
     function saveUiState() {
-      const payload = { langMode: globalLangMode, blur: globalBlurEnabled, focus: focusModeEnabled };
+      const payload = {
+        langMode: globalLangMode,
+        blur: globalBlurEnabled,
+        focus: focusModeEnabled,
+        autoResetLineRate,
+        preferredSlowRate
+      };
       try { localStorage.setItem(uiStorageKey(), JSON.stringify(payload)); } catch {}
     }
     function loadUiState() {
@@ -286,6 +312,8 @@
         if (s.langMode === "en" || s.langMode === "zh" || s.langMode === "both" || s.langMode === "custom") globalLangMode = s.langMode;
         if (typeof s.blur === "boolean") globalBlurEnabled = s.blur;
         if (typeof s.focus === "boolean") focusModeEnabled = s.focus;
+        if (typeof s.autoResetLineRate === "boolean") autoResetLineRate = s.autoResetLineRate;
+        if (Number(s.preferredSlowRate) > 0) preferredSlowRate = Number(s.preferredSlowRate);
       } catch {}
     }
     function refreshGlobalButtons() {
@@ -296,6 +324,8 @@
       ui.globalShowBothBtn.className = globalLangMode === "both" ? active : normal;
       ui.globalBlurBtn.className = globalBlurEnabled ? active : normal;
       ui.focusModeBtn.className = focusModeEnabled ? active : normal;
+      ui.lineRateResetBtn.className = autoResetLineRate ? active : normal;
+      ui.lineRateResetBtn.textContent = `跳下一句回 1x：${autoResetLineRate ? "開" : "關"}`;
     }
     function applyGlobalLang(mode) {
       globalLangMode = mode;
@@ -322,6 +352,12 @@
       refreshGlobalButtons();
       render();
     }
+    function setAutoResetLineRate(on) {
+      autoResetLineRate = Boolean(on);
+      if (!autoResetLineRate) lineRateOverrideActive = false;
+      saveUiState();
+      refreshGlobalButtons();
+    }
 
     function inc(i) {
       const line = transcript[i];
@@ -338,12 +374,19 @@
       const row = document.querySelector(`[data-line="${currentLineIndex}"]`);
       if (row) row.classList.add("ring-2", "ring-cyan-400", "is-current");
     }
+    function scrollCurrentIntoCenter() {
+      const row = document.querySelector(`[data-line="${currentLineIndex}"]`);
+      if (!row) return;
+      row.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+    }
     function setCurrent(i) {
+      const changed = i !== currentLineIndex;
       currentLineIndex = i;
       ui.currentLineText.textContent = i >= 0 ? String(i + 1) : "-";
       if (focusModeEnabled) render();
       else applyCurrentHighlight();
       syncPlayPauseButtons();
+      if (changed && i >= 0) scrollCurrentIntoCenter();
     }
     function clearLoop() {
       activeLoop = null;
@@ -380,7 +423,7 @@
         }
       }, 140);
     }
-    function setRate(rate) {
+    function setRate(rate, options = {}) {
       currentPlaybackRate = rate;
       if (playerReady && player) player.setPlaybackRate(rate);
       document.querySelectorAll("[data-rate-btn]").forEach((b) => {
@@ -389,6 +432,10 @@
           ? "rate-btn min-h-12 px-4 rounded-xl border border-cyan-300 bg-cyan-400 text-slate-900 font-semibold"
           : "rate-btn min-h-12 px-4 rounded-xl border border-slate-600 bg-slate-800";
       });
+      if (options.persistSlowPreference && rate !== 1) {
+        preferredSlowRate = rate;
+        saveUiState();
+      }
       if (focusModeEnabled) render();
       else applyCurrentHighlight();
     }
@@ -418,12 +465,25 @@
       }
       syncPlayPauseButtons();
     }
+    function playLineWithRate(i, rate) {
+      if (!transcript[i]) return;
+      if (rate !== 1) {
+        lineRateOverrideActive = true;
+        lineRateOverrideFrom = i;
+        preferredSlowRate = rate;
+      } else {
+        lineRateOverrideActive = false;
+        lineRateOverrideFrom = -1;
+      }
+      setRate(rate, { persistSlowPreference: true });
+      jumpTo(i, { increment: true });
+    }
     function render() {
       ui.transcriptList.innerHTML = "";
       ui.countText.textContent = String(transcript.length);
       if (!transcript.length) { ui.transcriptList.innerHTML = `<div class="rounded-xl border border-slate-700 bg-card p-4 text-slate-300">沒有可顯示的字幕。</div>`; return; }
       transcript.forEach((line, i) => {
-        if (focusModeEnabled && currentLineIndex >= 0 && i !== currentLineIndex) return;
+        const hiddenClass = focusModeEnabled && currentLineIndex >= 0 && i !== currentLineIndex ? " hidden" : "";
         const count = Number(countsByLine[countKey(line)] || 0);
         const isCurrent = i === currentLineIndex;
         const enVisible = (line.showEn || isCurrent) && line.en;
@@ -432,9 +492,9 @@
         const zhBlock = zhVisible ? `<p class="subtitle-text text-left w-full rounded-xl border border-slate-700 bg-slate-800/70 px-4 py-3 text-base leading-relaxed text-sky-200">${esc(line.zh)}</p>` : "";
         const playPauseLabel = isCurrent && isPlayerPlaying() ? "⏸️ 暫停" : "▶️ 播放";
         const row = document.createElement("div");
-        row.className = "subtitle-row rounded-xl border border-slate-700 bg-line/70 p-3 sm:p-4";
+        row.className = `subtitle-row rounded-xl border border-slate-700 bg-line/70 p-3 sm:p-4${hiddenClass}`;
         row.setAttribute("data-line", String(i));
-        row.innerHTML = `<div class="flex flex-col gap-3"><div class="flex flex-wrap items-center gap-2"><button data-jump-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl bg-cyan-400 text-slate-900 px-4 py-2 font-semibold text-base">${fmt(line.start)} 跳到這句</button><button data-loop-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl border border-slate-500 px-4 py-2 text-base">🔁 循環</button><button data-playpause-btn="${i}" class="min-h-12 rounded-xl border border-amber-400 text-amber-300 px-4 py-2 text-base">${playPauseLabel}</button><span data-count-label="${i}" class="px-3 py-2 rounded-xl border border-slate-500 text-sm text-slate-200">${count} 次</span><button data-toggle-en="${i}" class="min-h-10 rounded-lg border px-3 py-1 text-sm ${line.showEn ? "border-emerald-400 text-emerald-300" : "border-slate-500 text-slate-300"}">英</button><button data-toggle-zh="${i}" class="min-h-10 rounded-lg border px-3 py-1 text-sm ${line.showZh ? "border-sky-400 text-sky-300" : "border-slate-500 text-slate-300"}">中</button></div>${enBlock}${zhBlock}</div>`;
+        row.innerHTML = `<div class="flex flex-col gap-3"><div class="flex flex-wrap items-center gap-2"><button data-jump-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl bg-cyan-400 text-slate-900 px-4 py-2 font-semibold text-base">${fmt(line.start)} 跳到這句</button><button data-loop-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl border border-slate-500 px-4 py-2 text-base">🔁 循環</button><button data-playpause-btn="${i}" class="min-h-12 rounded-xl border border-amber-400 text-amber-300 px-4 py-2 text-base">${playPauseLabel}</button><button data-line-rate="${i}" data-line-rate-value="${preferredSlowRate}" class="min-h-10 rounded-lg border border-violet-400 text-violet-300 px-3 py-1 text-sm">${preferredSlowRate}x</button><button data-line-rate="${i}" data-line-rate-value="1" class="min-h-10 rounded-lg border border-violet-400 text-violet-300 px-3 py-1 text-sm">1x</button><span data-count-label="${i}" class="px-3 py-2 rounded-xl border border-slate-500 text-sm text-slate-200">${count} 次</span><button data-toggle-en="${i}" class="min-h-10 rounded-lg border px-3 py-1 text-sm ${line.showEn ? "border-emerald-400 text-emerald-300" : "border-slate-500 text-slate-300"}">英</button><button data-toggle-zh="${i}" class="min-h-10 rounded-lg border px-3 py-1 text-sm ${line.showZh ? "border-sky-400 text-sky-300" : "border-slate-500 text-slate-300"}">中</button></div>${enBlock}${zhBlock}</div>`;
         row.addEventListener("pointerdown", () => row.classList.add("force-reveal"));
         ["pointerup", "pointercancel", "pointerleave"].forEach((e) => row.addEventListener(e, () => row.classList.remove("force-reveal")));
         ui.transcriptList.appendChild(row);
@@ -446,6 +506,11 @@
         clearLoop(); clearAutoPause(); b.classList.add("bg-emerald-400", "text-slate-900"); loopLine(i);
       }));
       document.querySelectorAll("[data-playpause-btn]").forEach((b) => b.addEventListener("click", () => toggleLinePlayback(Number(b.getAttribute("data-playpause-btn")))));
+      document.querySelectorAll("[data-line-rate]").forEach((b) => b.addEventListener("click", () => {
+        const i = Number(b.getAttribute("data-line-rate"));
+        const rate = Number(b.getAttribute("data-line-rate-value"));
+        playLineWithRate(i, rate);
+      }));
       document.querySelectorAll("[data-toggle-en]").forEach((b) => b.addEventListener("click", () => {
         const i = Number(b.getAttribute("data-toggle-en"));
         transcript[i].showEn = !transcript[i].showEn;
@@ -472,6 +537,11 @@
       if (!playerReady || !player || !transcript.length) return;
       const t = player.getCurrentTime();
       const i = findIdx(t);
+      if (lineRateOverrideActive && autoResetLineRate && i >= 0 && i !== lineRateOverrideFrom) {
+        lineRateOverrideActive = false;
+        lineRateOverrideFrom = -1;
+        setRate(1, { persistSlowPreference: false });
+      }
       if (i >= 0 && i !== currentLineIndex) setCurrent(i);
       syncPlayPauseButtons();
       if (!activeLoop && i >= 0) {
@@ -541,6 +611,7 @@
     ui.globalShowBothBtn.addEventListener("click", () => applyGlobalLang("both"));
     ui.globalBlurBtn.addEventListener("click", () => setGlobalBlur(!globalBlurEnabled));
     ui.focusModeBtn.addEventListener("click", () => setFocusMode(!focusModeEnabled));
+    ui.lineRateResetBtn.addEventListener("click", () => setAutoResetLineRate(!autoResetLineRate));
     document.querySelectorAll("[data-rate-btn]").forEach((b) => b.addEventListener("click", () => setRate(Number(b.getAttribute("data-rate-btn")))));
     ui.urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") loadVideoAndTranscript(); });
     refreshGlobalButtons();
