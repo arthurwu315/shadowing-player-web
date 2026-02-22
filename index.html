@@ -96,9 +96,9 @@
       transform: translate(1px, 1px) scale(0.95);
       box-shadow: 2px 2px 0 0 rgba(67, 61, 60, 0.2) !important;
     }
-    #loadBtn, #prevBtn, #replayBtn, #nextBtn, [data-rate-btn], [data-line-rate], [data-playpause-btn], [data-jump-btn] { background: #B7C4CF !important; }
-    #globalShowEnBtn, #globalShowZhBtn, #globalShowBothBtn, [data-toggle-en], [data-toggle-zh] { background: #EEE3CB !important; }
-    #stopLoopBtn, [data-loop-btn], #manualCancelBtn, #lineRateResetBtn { background: #D7C0AE !important; }
+    #loadBtn, #prevBtn, #replayBtn, #nextBtn, [data-rate-btn], [data-action="play"], [data-action="jump"] { background: #B7C4CF !important; }
+    #globalShowEnBtn, #globalShowZhBtn, #globalShowBothBtn { background: #EEE3CB !important; }
+    #stopLoopBtn, [data-action="loop"], #manualCancelBtn { background: #D7C0AE !important; }
     .subtitle-text { color: #433D3C !important; background: #fffaf3 !important; border-color: #433D3C !important; }
     .subtitle-row .text-sky-200 { color: #433D3C !important; }
     .count-badge { background: #f5efe5 !important; color: #2B2D42 !important; }
@@ -167,6 +167,43 @@
     .global-blur .subtitle-row.is-current .subtitle-text,
     .global-blur .subtitle-row.intent-reveal .subtitle-text { filter: none; opacity: 1; }
     .subtitle-row:hover { background: rgba(163, 177, 138, 0.09) !important; }
+    .card-section {
+      border: 1px solid rgba(67, 61, 60, 0.18);
+      border-radius: 16px;
+      padding: 0.65rem;
+      background: rgba(255, 255, 255, 0.7);
+    }
+    .section-title {
+      color: #433D3C;
+      font-size: 0.86rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .btn-primary {
+      background: #B7C4CF !important;
+      color: #433D3C !important;
+      border-color: #433D3C !important;
+    }
+    .btn-secondary {
+      background: #EEE3CB !important;
+      color: #433D3C !important;
+      border-color: #433D3C !important;
+    }
+    .subtitle-card.active {
+      border: 3px solid #A3B18A !important;
+    }
+    .subtitle-actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+    }
+    .subtitle-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.45rem;
+    }
     .subtitle-row.is-current {
       border: 3px solid #A3B18A !important;
       background: rgba(255, 221, 210, 0.5) !important;
@@ -329,56 +366,52 @@
         <div class="aspect-video w-full rounded-xl overflow-hidden bg-black"><div id="player" class="w-full h-full"></div></div>
       </div>
       <div id="controlPanel" class="control-panel mt-2 bg-card/70 border border-slate-700 rounded-2xl p-2 sm:p-3">
-        <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
-          <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">影片：<span id="videoIdText">-</span></span>
-          <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">字幕行數：<span id="countText">0</span></span>
-          <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">目前句：<span id="currentLineText">-</span></span>
-          <button id="stopLoopBtn" class="min-h-12 rounded-xl border border-rose-400 text-rose-300 px-4 py-2">停止循環</button>
-        </div>
-        <div class="mt-3 pixel-group">
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <button id="prevBtn" class="min-h-14 rounded-xl bg-slate-800 border border-slate-600 text-base font-semibold">上一句</button>
-            <button id="replayBtn" class="min-h-14 rounded-xl bg-cyan-400 text-slate-900 text-base font-semibold">重新播放本句</button>
-            <button id="nextBtn" class="min-h-14 rounded-xl bg-slate-800 border border-slate-600 text-base font-semibold">下一句</button>
+        <section class="card-section mt-2">
+          <h2 class="section-title text-sm font-semibold">Playback</h2>
+          <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
+            <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">影片：<span id="videoIdText">-</span></span>
+            <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">字幕行數：<span id="countText">0</span></span>
+            <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">目前句：<span id="currentLineText">-</span></span>
           </div>
-        </div>
-        <div class="mt-3 flex flex-wrap gap-2">
-          <button data-rate-btn="0.75" class="rate-btn min-h-12 px-4 rounded-xl border border-slate-600 bg-slate-800">0.75x</button>
-          <button data-rate-btn="1" class="rate-btn min-h-12 px-4 rounded-xl border border-cyan-300 bg-cyan-400 text-slate-900 font-semibold">1x</button>
-          <button data-rate-btn="1.25" class="rate-btn min-h-12 px-4 rounded-xl border border-slate-600 bg-slate-800">1.25x</button>
-        </div>
-        <div class="mt-3">
-          <label class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 flex items-center justify-between">
-            <span>Auto-Pause（句尾留白）</span><input id="autoPauseToggle" type="checkbox" class="h-5 w-5" />
-          </label>
-        </div>
-        <div id="mirrorControls" class="mt-3 pixel-group">
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="text-sm font-semibold">當前句即時控制</span>
-            <button id="mirrorSlowBtn" class="min-h-10 rounded-lg border px-3 py-1 text-sm">0.7x</button>
-            <button id="mirrorNormalBtn" class="min-h-10 rounded-lg border px-3 py-1 text-sm">1x</button>
-            <button id="mirrorLoopBtn" class="min-h-10 rounded-lg border px-3 py-1 text-sm">🔁 循環</button>
-            <button id="mirrorPlayBtn" class="min-h-10 rounded-lg border px-3 py-1 text-sm">▶️ 播放</button>
+          <div class="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button id="prevBtn" class="btn-secondary min-h-12">上一句</button>
+            <button id="topPlayPauseBtn" class="btn-primary min-h-12">▶️ 播放</button>
+            <button id="replayBtn" class="btn-secondary min-h-12">重播本句</button>
+            <button id="nextBtn" class="btn-primary min-h-12">下一句</button>
           </div>
-        </div>
-      </div>
-      <div class="control-panel mt-2 border-t border-slate-600/50 pt-2 pixel-group-accent">
-        <h2 class="text-base sm:text-lg font-semibold mb-3">全局顯示控制面板</h2>
-        <div class="tower-global-row flex gap-2">
-          <button id="globalShowEnBtn" class="pill-btn">🅰️ L1</button>
-          <button id="globalShowZhBtn" class="pill-btn">🅱️ L2</button>
-          <button id="globalShowBothBtn" class="pill-btn">🌐 L1+L2</button>
-          <button id="globalBlurBtn" class="pill-btn">🕶️ 盲聽</button>
-          <button id="focusModeBtn" class="pill-btn">🎯 聚焦</button>
-          <button id="hidePlayerBtn" class="pill-btn">🎬 隱藏播放器</button>
-          <button id="lineRateResetBtn" class="pill-btn">⏩ 下一句回 1x</button>
-          <button id="resetCountsBtn" class="pill-btn">🧹 清空本片進度</button>
-          <button id="toggleSidebarBtn" class="pill-btn hidden">🧭 隱藏左側</button>
-        </div>
-      </div>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <button data-rate-btn="0.75" class="rate-btn btn-secondary min-h-10 px-4">0.75x</button>
+            <button data-rate-btn="1" class="rate-btn btn-primary min-h-10 px-4">1x</button>
+            <button data-rate-btn="1.25" class="rate-btn btn-secondary min-h-10 px-4">1.25x</button>
+            <button id="stopLoopBtn" class="btn-secondary min-h-10 px-4">停止循環</button>
+          </div>
+          <div class="mt-2">
+            <label class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 flex items-center justify-between">
+              <span>Auto Pause</span><input id="autoPauseToggle" type="checkbox" class="h-5 w-5" />
+            </label>
+          </div>
+        </section>
 
-      <div class="control-panel mt-2 border-t border-slate-600/50 pt-2 pixel-group-accent">
-        <button id="clearRecentBtn" class="min-h-10 rounded-xl border border-rose-500 px-3 py-1 text-sm">刪除全部歷史紀錄</button>
+        <section class="card-section mt-3">
+          <h2 class="section-title text-sm font-semibold">Display</h2>
+          <div class="mt-2 tower-global-row flex gap-2">
+            <button id="globalShowEnBtn" class="pill-btn btn-secondary">🅰️ L1</button>
+            <button id="globalShowZhBtn" class="pill-btn btn-secondary">🅱️ L2</button>
+            <button id="globalShowBothBtn" class="pill-btn btn-primary">🌐 L1+L2</button>
+            <button id="globalBlurBtn" class="pill-btn btn-secondary">🕶️ 盲聽</button>
+            <button id="focusModeBtn" class="pill-btn btn-secondary">🎯 聚焦</button>
+            <button id="hidePlayerBtn" class="pill-btn btn-secondary">🎬 隱藏播放器</button>
+            <button id="toggleSidebarBtn" class="pill-btn btn-secondary hidden">🧭 隱藏左側</button>
+          </div>
+        </section>
+
+        <details class="card-section mt-3" open>
+          <summary class="section-title cursor-pointer">System</summary>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <button id="resetCountsBtn" class="btn-secondary min-h-10 px-4">🧹 清空本片進度</button>
+            <button id="clearRecentBtn" class="btn-secondary min-h-10 px-4">🗑️ 清除歷史</button>
+          </div>
+        </details>
       </div>
     </section>
 
@@ -456,8 +489,8 @@
       globalBlurBtn: document.getElementById("globalBlurBtn"),
       focusModeBtn: document.getElementById("focusModeBtn"),
       hidePlayerBtn: document.getElementById("hidePlayerBtn"),
-      lineRateResetBtn: document.getElementById("lineRateResetBtn"),
       resetCountsBtn: document.getElementById("resetCountsBtn"),
+      topPlayPauseBtn: document.getElementById("topPlayPauseBtn"),
       toggleSidebarBtn: document.getElementById("toggleSidebarBtn"),
       showSidebarBtn: document.getElementById("showSidebarBtn"),
       controlTower: document.getElementById("controlTower"),
@@ -470,11 +503,7 @@
       manualEnInput: document.getElementById("manualEnInput"),
       manualZhInput: document.getElementById("manualZhInput"),
       manualCancelBtn: document.getElementById("manualCancelBtn"),
-      manualApplyBtn: document.getElementById("manualApplyBtn"),
-      mirrorSlowBtn: document.getElementById("mirrorSlowBtn"),
-      mirrorNormalBtn: document.getElementById("mirrorNormalBtn"),
-      mirrorLoopBtn: document.getElementById("mirrorLoopBtn"),
-      mirrorPlayBtn: document.getElementById("mirrorPlayBtn")
+      manualApplyBtn: document.getElementById("manualApplyBtn")
     };
 
     let player = null, playerReady = false, transcript = [], currentLineIndex = -1;
@@ -484,10 +513,6 @@
     let globalLangMode = "both";
     let globalBlurEnabled = false;
     let focusModeEnabled = false;
-    let autoResetLineRate = true;
-    let preferredSlowRate = 0.7;
-    let lineRateOverrideFrom = -1;
-    let lineRateOverrideActive = false;
     let towerCollapsed = false;
     let playerHidden = false;
     let sidebarHidden = false;
@@ -743,8 +768,6 @@
         langMode: globalLangMode,
         blur: globalBlurEnabled,
         focus: focusModeEnabled,
-        autoResetLineRate,
-        preferredSlowRate,
         playerHidden,
         sidebarHidden
       };
@@ -783,10 +806,18 @@
         if (s.langMode === "en" || s.langMode === "zh" || s.langMode === "both" || s.langMode === "custom") globalLangMode = s.langMode;
         if (typeof s.blur === "boolean") globalBlurEnabled = s.blur;
         if (typeof s.focus === "boolean") focusModeEnabled = s.focus;
-        if (typeof s.autoResetLineRate === "boolean") autoResetLineRate = s.autoResetLineRate;
-        if (Number(s.preferredSlowRate) > 0) preferredSlowRate = Number(s.preferredSlowRate);
         if (typeof s.playerHidden === "boolean") playerHidden = s.playerHidden;
         if (typeof s.sidebarHidden === "boolean") sidebarHidden = s.sidebarHidden;
+      } catch {}
+    }
+    function cleanupLegacyLineRateState() {
+      try {
+        const key = uiStorageKey();
+        const s = JSON.parse(localStorage.getItem(key) || "{}");
+        if (!s || typeof s !== "object") return;
+        if ("autoResetLineRate" in s) delete s.autoResetLineRate;
+        if ("preferredSlowRate" in s) delete s.preferredSlowRate;
+        localStorage.setItem(key, JSON.stringify(s));
       } catch {}
     }
     function updateTrackLabels() { return; }
@@ -800,13 +831,11 @@
       ui.globalBlurBtn.className = globalBlurEnabled ? active : normal;
       ui.focusModeBtn.className = focusModeEnabled ? active : normal;
       ui.hidePlayerBtn.className = playerHidden ? active : normal;
-      ui.lineRateResetBtn.className = autoResetLineRate ? active : normal;
       ui.globalShowEnBtn.textContent = `🅰️ ${trackLabelA}`;
       ui.globalShowZhBtn.textContent = `🅱️ ${trackLabelB}`;
       ui.globalShowBothBtn.textContent = `🌐 ${trackLabelA}+${trackLabelB}`;
       ui.hidePlayerBtn.textContent = playerHidden ? "🎬 顯示播放器" : "🎬 隱藏播放器";
       ui.toggleSidebarBtn.textContent = sidebarHidden ? "🧭 顯示左側" : "🧭 隱藏左側";
-      ui.lineRateResetBtn.textContent = autoResetLineRate ? "⏩ 下一句回 1x：開" : "⏩ 下一句回 1x：關";
     }
     function setTowerCollapsed(collapsed) {
       towerCollapsed = Boolean(collapsed);
@@ -838,12 +867,6 @@
       saveUiState();
       refreshGlobalButtons();
       render();
-    }
-    function setAutoResetLineRate(on) {
-      autoResetLineRate = Boolean(on);
-      if (!autoResetLineRate) lineRateOverrideActive = false;
-      saveUiState();
-      refreshGlobalButtons();
     }
     function setPlayerHidden(on) {
       playerHidden = Boolean(on);
@@ -879,9 +902,9 @@
     }
     function findIdx(t) { for (let i = transcript.length - 1; i >= 0; i -= 1) if (t >= transcript[i].start) return i; return -1; }
     function applyCurrentHighlight() {
-      document.querySelectorAll("[data-line]").forEach((r) => r.classList.remove("is-current"));
+      document.querySelectorAll("[data-line]").forEach((r) => r.classList.remove("is-current", "active"));
       const row = document.querySelector(`[data-line="${currentLineIndex}"]`);
-      if (row) row.classList.add("is-current");
+      if (row) row.classList.add("is-current", "active");
     }
     function setIntentReveal(i) {
       intentRevealIndex = i;
@@ -909,7 +932,7 @@
       activeLoop = null;
       if (loopTimer) clearInterval(loopTimer);
       loopTimer = null;
-      document.querySelectorAll("[data-loop-btn]").forEach((b) => b.classList.remove("bg-emerald-400", "text-slate-900"));
+      document.querySelectorAll('[data-action="loop"]').forEach((b) => { b.textContent = "↻ 循環"; });
     }
     function clearAutoPause() { if (autoPauseTimer) clearTimeout(autoPauseTimer); autoPauseTimer = null; autoPauseLockIndex = null; }
     function jumpTo(i, opt = {}) {
@@ -940,7 +963,7 @@
         }
       }, 140);
     }
-    function setRate(rate, options = {}) {
+    function setRate(rate) {
       currentPlaybackRate = rate;
       if (playerReady && player) player.setPlaybackRate(rate);
       document.querySelectorAll("[data-rate-btn]").forEach((b) => {
@@ -949,10 +972,6 @@
           ? "rate-btn min-h-12 px-4 rounded-xl border border-cyan-300 bg-cyan-400 text-slate-900 font-semibold"
           : "rate-btn min-h-12 px-4 rounded-xl border border-slate-600 bg-slate-800";
       });
-      if (options.persistSlowPreference && rate !== 1) {
-        preferredSlowRate = rate;
-        saveUiState();
-      }
       if (focusModeEnabled) render();
       else applyCurrentHighlight();
     }
@@ -965,13 +984,16 @@
     }
     function syncPlayPauseButtons() {
       const playing = isPlayerPlaying();
-      document.querySelectorAll("[data-playpause-btn]").forEach((btn) => {
-        const i = Number(btn.getAttribute("data-playpause-btn"));
+      document.querySelectorAll('[data-action="play"]').forEach((btn) => {
+        const i = Number(btn.getAttribute("data-index"));
         const isCurrent = i === currentLineIndex;
         btn.textContent = isCurrent && playing ? "⏸️ 暫停" : "▶️ 播放";
       });
-      ui.mirrorPlayBtn.textContent = currentLineIndex >= 0 && playing ? "⏸️ 暫停當前句" : "▶️ 播放當前句";
-      ui.mirrorLoopBtn.textContent = activeLoop && activeLoop.index === currentLineIndex ? "🔁 取消循環" : "🔁 循環當前句";
+      document.querySelectorAll('[data-action="loop"]').forEach((btn) => {
+        const i = Number(btn.getAttribute("data-index"));
+        btn.textContent = activeLoop && activeLoop.index === i ? "↻ 取消" : "↻ 循環";
+      });
+      ui.topPlayPauseBtn.textContent = playing ? "⏸️ 暫停" : "▶️ 播放";
     }
     function toggleLinePlayback(i) {
       if (!playerReady || !player || !transcript[i]) return;
@@ -994,19 +1016,24 @@
       if (currentLineIndex >= 0 && transcript[currentLineIndex]) return currentLineIndex;
       return transcript.length ? 0 : -1;
     }
-    function playLineWithRate(i, rate) {
-      if (!transcript[i]) return;
-      if (!playerReady || !player) return;
-      if (rate !== 1) {
-        lineRateOverrideActive = true;
-        lineRateOverrideFrom = i;
-        preferredSlowRate = rate;
-      } else {
-        lineRateOverrideActive = false;
-        lineRateOverrideFrom = -1;
-      }
-      setRate(rate, { persistSlowPreference: true });
-      jumpTo(i, { increment: true });
+    function togglePlay() {
+      const i = getActiveLineIndex();
+      if (i >= 0) toggleLinePlayback(i);
+    }
+    function playPrevious() {
+      if (!transcript.length) return;
+      jumpTo(Math.max(0, (currentLineIndex >= 0 ? currentLineIndex : 0) - 1), { increment: true });
+    }
+    function playNext() {
+      if (!transcript.length) return;
+      jumpTo(Math.min(transcript.length - 1, (currentLineIndex >= 0 ? currentLineIndex : 0) + 1), { increment: true });
+    }
+    function toggleCurrentLoop() {
+      const i = getActiveLineIndex();
+      if (i < 0) return;
+      if (activeLoop && activeLoop.index === i) clearLoop();
+      else { clearLoop(); clearAutoPause(); loopLine(i); }
+      syncPlayPauseButtons();
     }
     function render() {
       ui.transcriptList.innerHTML = "";
@@ -1018,13 +1045,13 @@
         const isCurrent = i === currentLineIndex;
         const enVisible = (line.showEn || isCurrent) && line.en;
         const zhVisible = (line.showZh || isCurrent) && line.zh;
-        const enBlock = enVisible ? `<p class="subtitle-text text-left w-full rounded-xl border border-slate-600 bg-slate-900/70 px-4 py-3 text-base leading-relaxed text-slate-100">${esc(line.en)}</p>` : "";
-        const zhBlock = zhVisible ? `<p class="subtitle-text text-left w-full rounded-xl border border-slate-700 bg-slate-800/70 px-4 py-3 text-base leading-relaxed text-sky-200">${esc(line.zh)}</p>` : "";
+        const enBlock = enVisible ? `<div class="text-l1 subtitle-text text-left w-full rounded-xl border border-slate-600 bg-slate-900/70 px-4 py-3 text-base leading-relaxed text-slate-100">${esc(line.en)}</div>` : "";
+        const zhBlock = zhVisible ? `<div class="text-l2 subtitle-text text-left w-full rounded-xl border border-slate-700 bg-slate-800/70 px-4 py-3 text-base leading-relaxed text-sky-200">${esc(line.zh)}</div>` : "";
         const playPauseLabel = isCurrent && isPlayerPlaying() ? "⏸️ 暫停" : "▶️ 播放";
         const row = document.createElement("div");
-        row.className = `subtitle-row rounded-xl border border-slate-700 bg-line/70 p-2.5 sm:p-3${hiddenClass}`;
+        row.className = `subtitle-row subtitle-card rounded-xl border border-slate-700 bg-line/70 p-2.5 sm:p-3${hiddenClass}`;
         row.setAttribute("data-line", String(i));
-        row.innerHTML = `<div class="flex flex-col gap-2"><div class="flex flex-wrap items-center gap-1.5"><button data-jump-btn="${i}" class="min-h-10 rounded-lg bg-cyan-400 text-slate-900 px-3 py-1.5 font-semibold text-sm">${fmt(line.start)} 跳到</button><button data-playpause-btn="${i}" class="min-h-10 rounded-lg border border-amber-400 text-amber-300 px-3 py-1.5 text-sm">${playPauseLabel}</button><button data-loop-btn="${i}" class="min-h-10 rounded-lg border border-slate-500 px-3 py-1.5 text-sm">🔁 循環</button><button data-line-rate="${i}" data-line-rate-value="${preferredSlowRate}" class="min-h-10 rounded-lg border border-violet-400 text-violet-300 px-2.5 py-1 text-sm">${preferredSlowRate}x</button><button data-line-rate="${i}" data-line-rate-value="1" class="min-h-10 rounded-lg border border-violet-400 text-violet-300 px-2.5 py-1 text-sm">1x</button><button data-toggle-en="${i}" class="min-h-10 rounded-lg border px-2.5 py-1 text-sm ${line.showEn ? "border-emerald-400 text-emerald-300" : "border-slate-500 text-slate-300"}">${trackLabelA}</button><button data-toggle-zh="${i}" class="min-h-10 rounded-lg border px-2.5 py-1 text-sm ${line.showZh ? "border-sky-400 text-sky-300" : "border-slate-500 text-slate-300"}">${trackLabelB}</button><span data-count-label="${i}" class="count-badge h-8 min-w-8 px-2 rounded-full border border-slate-500 bg-slate-900 text-sm text-slate-100 inline-flex items-center justify-center font-semibold">${count}</span></div>${enBlock}${zhBlock}</div>`;
+        row.innerHTML = `<div class="subtitle-meta"><button data-action="jump" data-index="${i}" class="timestamp btn-secondary min-h-10 px-3 py-1.5 text-sm">${fmt(line.start)}</button><span data-count-label="${i}" class="text-xs text-slate-500">x ${count}</span></div><div class="subtitle-content flex flex-col gap-2">${zhBlock}${enBlock}</div><div class="subtitle-actions mt-2"><button data-action="play" data-index="${i}" class="btn-primary min-h-10 px-4 text-sm">${playPauseLabel}</button><button data-action="loop" data-index="${i}" class="btn-secondary min-h-10 px-4 text-sm">${activeLoop && activeLoop.index === i ? "↻ 取消" : "↻ 循環"}</button></div>`;
         row.addEventListener("click", (event) => {
           const target = event.target;
           if (target && target.closest && target.closest("button")) return;
@@ -1047,11 +1074,6 @@
         lastProgressSaveAt = now;
       }
       const i = findIdx(t);
-      if (lineRateOverrideActive && autoResetLineRate && i >= 0 && i !== lineRateOverrideFrom) {
-        lineRateOverrideActive = false;
-        lineRateOverrideFrom = -1;
-        setRate(1, { persistSlowPreference: false });
-      }
       if (i >= 0 && i !== currentLineIndex) setCurrent(i);
       syncPlayPauseButtons();
       if (!activeLoop && i >= 0) {
@@ -1099,6 +1121,7 @@
       const fetchedTitle = await fetchVideoTitleById(videoId);
       touchRecentVideo(videoId, fetchedTitle);
       ensurePlayer(videoId);
+      cleanupLegacyLineRateState();
       loadUiState();
       syncTranscriptOffset();
       setPlayerHidden(playerHidden);
@@ -1144,9 +1167,9 @@
     ui.manualCancelBtn.addEventListener("click", () => ui.manualDialog.close());
     ui.manualApplyBtn.addEventListener("click", () => { applyManual(); ui.manualDialog.close(); });
     ui.stopLoopBtn.addEventListener("click", () => { clearLoop(); clearAutoPause(); });
-    ui.prevBtn.addEventListener("click", () => { if (transcript.length) jumpTo(Math.max(0, (currentLineIndex >= 0 ? currentLineIndex : 0) - 1), { increment: true }); });
+    ui.prevBtn.addEventListener("click", playPrevious);
     ui.replayBtn.addEventListener("click", () => { if (transcript.length) jumpTo(currentLineIndex >= 0 ? currentLineIndex : 0, { increment: true }); });
-    ui.nextBtn.addEventListener("click", () => { if (transcript.length) jumpTo(Math.min(transcript.length - 1, (currentLineIndex >= 0 ? currentLineIndex : 0) + 1), { increment: true }); });
+    ui.nextBtn.addEventListener("click", playNext);
     ui.autoPauseToggle.addEventListener("change", (e) => { autoPauseEnabled = Boolean(e.target.checked); clearAutoPause(); setStatus(autoPauseEnabled ? "Auto-Pause 已開啟" : "Auto-Pause 已關閉"); });
     ui.globalShowEnBtn.addEventListener("click", () => applyGlobalLang("en"));
     ui.globalShowZhBtn.addEventListener("click", () => applyGlobalLang("zh"));
@@ -1156,74 +1179,32 @@
     ui.hidePlayerBtn.addEventListener("click", () => setPlayerHidden(!playerHidden));
     ui.toggleSidebarBtn.addEventListener("click", () => setSidebarHidden(!sidebarHidden));
     ui.showSidebarBtn.addEventListener("click", () => setSidebarHidden(false));
-    ui.lineRateResetBtn.addEventListener("click", () => setAutoResetLineRate(!autoResetLineRate));
     ui.resetCountsBtn.addEventListener("click", resetCurrentVideoCounts);
+    ui.topPlayPauseBtn.addEventListener("click", () => {
+      const i = getActiveLineIndex();
+      if (i >= 0) toggleLinePlayback(i);
+    });
     ui.themeToggleBtn.addEventListener("click", cycleTheme);
-    ui.transcriptList.addEventListener("click", (event) => {
-      const btn = event.target.closest("button");
+    ui.transcriptSection.addEventListener("click", (event) => {
+      const btn = event.target.closest("[data-action]");
       if (!btn) return;
-      if (btn.hasAttribute("data-jump-btn")) {
-        jumpTo(Number(btn.getAttribute("data-jump-btn")), { increment: true });
+      const action = btn.getAttribute("data-action");
+      const index = Number(btn.getAttribute("data-index"));
+      if (!Number.isFinite(index)) return;
+      if (action === "jump") {
+        setIntentReveal(index);
+        jumpTo(index, { increment: true });
         return;
       }
-      if (btn.hasAttribute("data-loop-btn")) {
-        const i = Number(btn.getAttribute("data-loop-btn"));
-        if (activeLoop && activeLoop.index === i) clearLoop();
-        else { clearLoop(); clearAutoPause(); loopLine(i); }
+      if (action === "loop") {
+        if (activeLoop && activeLoop.index === index) clearLoop();
+        else { clearLoop(); clearAutoPause(); loopLine(index); }
         syncPlayPauseButtons();
         return;
       }
-      if (btn.hasAttribute("data-playpause-btn")) {
-        toggleLinePlayback(Number(btn.getAttribute("data-playpause-btn")));
-        return;
+      if (action === "play") {
+        toggleLinePlayback(index);
       }
-      if (btn.hasAttribute("data-line-rate")) {
-        playLineWithRate(Number(btn.getAttribute("data-line-rate")), Number(btn.getAttribute("data-line-rate-value")));
-        return;
-      }
-      if (btn.hasAttribute("data-toggle-en")) {
-        const i = Number(btn.getAttribute("data-toggle-en"));
-        if (!transcript[i]) return;
-        transcript[i].showEn = !transcript[i].showEn;
-        globalLangMode = "custom";
-        saveBilingual();
-        saveUiState();
-        refreshGlobalButtons();
-        render();
-        return;
-      }
-      if (btn.hasAttribute("data-toggle-zh")) {
-        const i = Number(btn.getAttribute("data-toggle-zh"));
-        if (!transcript[i]) return;
-        transcript[i].showZh = !transcript[i].showZh;
-        globalLangMode = "custom";
-        saveBilingual();
-        saveUiState();
-        refreshGlobalButtons();
-        render();
-      }
-    });
-    ui.mirrorSlowBtn.addEventListener("click", () => {
-      const i = getActiveLineIndex();
-      if (i < 0) return;
-      playLineWithRate(i, 0.7);
-    });
-    ui.mirrorNormalBtn.addEventListener("click", () => {
-      const i = getActiveLineIndex();
-      if (i < 0) return;
-      playLineWithRate(i, 1);
-    });
-    ui.mirrorLoopBtn.addEventListener("click", () => {
-      const i = getActiveLineIndex();
-      if (i < 0) return;
-      if (activeLoop && activeLoop.index === i) clearLoop();
-      else { clearLoop(); clearAutoPause(); loopLine(i); }
-      syncPlayPauseButtons();
-    });
-    ui.mirrorPlayBtn.addEventListener("click", () => {
-      const i = getActiveLineIndex();
-      if (i < 0) return;
-      toggleLinePlayback(i);
     });
     ui.historyToggleBtn.addEventListener("click", () => {
       if (isMobileLayout()) {
@@ -1258,6 +1239,25 @@
       recentVideos = [];
       saveRecentVideos();
       renderRecentVideos();
+    });
+    document.addEventListener("keydown", (e) => {
+      const activeTag = document.activeElement?.tagName || "";
+      if (activeTag === "INPUT" || activeTag === "TEXTAREA") return;
+      switch (e.code) {
+        case "Space":
+          e.preventDefault();
+          togglePlay();
+          break;
+        case "ArrowLeft":
+          playPrevious();
+          break;
+        case "ArrowRight":
+          playNext();
+          break;
+        case "KeyR":
+          toggleCurrentLoop();
+          break;
+      }
     });
     document.querySelectorAll("[data-rate-btn]").forEach((b) => b.addEventListener("click", () => setRate(Number(b.getAttribute("data-rate-btn")))));
     ui.urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") loadVideoAndTranscript(); });
