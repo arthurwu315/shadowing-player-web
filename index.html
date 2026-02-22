@@ -41,7 +41,7 @@
       padding-left: 0.9rem !important;
       padding-right: 0.9rem !important;
     }
-    button:hover, .pill-btn:hover { filter: brightness(0.92); transform: translateY(-1px); }
+    button:hover, .pill-btn:hover { filter: brightness(0.92); opacity: 0.8; transform: translateY(-1px); }
     button:active, .pill-btn:active {
       transform: translate(1px, 1px) scale(0.95);
       box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 1) !important;
@@ -70,6 +70,18 @@
       overflow-y: hidden;
       white-space: nowrap;
       align-items: center;
+    }
+    .pixel-group {
+      border: 2px solid #000;
+      background: #ffffff;
+      box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 1);
+      padding: 0.5rem;
+    }
+    .pixel-group-accent {
+      border: 2px solid #000;
+      background: #f0f5f4;
+      box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 1);
+      padding: 0.5rem;
     }
     @media (max-width: 640px) { .control-panel { max-height: 80px; overflow: auto; } }
     .pill-btn {
@@ -108,6 +120,7 @@
     .bottom-pane::-webkit-scrollbar-thumb { background: #2f2f2f; border: 2px solid #000; }
     .bottom-pane { scrollbar-color: #2f2f2f #d9d9d9; scrollbar-width: thin; }
     @media (min-width: 1024px) {
+      .top-pane { max-height: 50vh; }
       .top-pane-inner { max-width: 1100px; margin: 0 auto; width: 100%; }
       #transcriptList { max-width: 56rem; margin: 0 auto; }
     }
@@ -122,8 +135,8 @@
   </style>
 </head>
 <body class="bg-bg text-slate-100 min-h-screen">
-  <div class="app-shell">
-    <div class="top-pane px-4 pt-4 sm:pt-6">
+  <div id="app-container" class="h-screen flex flex-col">
+    <div class="top-pane flex-none px-4 pt-4 sm:pt-6">
       <div class="top-pane-inner">
     <header class="mb-5 sm:mb-6">
       <h1 class="pixel-title text-2xl sm:text-3xl font-bold tracking-tight">YouTube 跟讀播放器</h1>
@@ -153,10 +166,12 @@
           <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">目前句：<span id="currentLineText">-</span></span>
           <button id="stopLoopBtn" class="min-h-12 rounded-xl border border-rose-400 text-rose-300 px-4 py-2">停止循環</button>
         </div>
-        <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
-          <button id="prevBtn" class="min-h-14 rounded-xl bg-slate-800 border border-slate-600 text-base font-semibold">上一句</button>
-          <button id="replayBtn" class="min-h-14 rounded-xl bg-cyan-400 text-slate-900 text-base font-semibold">重新播放本句</button>
-          <button id="nextBtn" class="min-h-14 rounded-xl bg-slate-800 border border-slate-600 text-base font-semibold">下一句</button>
+        <div class="mt-3 pixel-group">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <button id="prevBtn" class="min-h-14 rounded-xl bg-slate-800 border border-slate-600 text-base font-semibold">上一句</button>
+            <button id="replayBtn" class="min-h-14 rounded-xl bg-cyan-400 text-slate-900 text-base font-semibold">重新播放本句</button>
+            <button id="nextBtn" class="min-h-14 rounded-xl bg-slate-800 border border-slate-600 text-base font-semibold">下一句</button>
+          </div>
         </div>
         <div class="mt-3 flex flex-wrap gap-2">
           <button data-rate-btn="0.75" class="rate-btn min-h-12 px-4 rounded-xl border border-slate-600 bg-slate-800">0.75x</button>
@@ -169,7 +184,7 @@
           </label>
         </div>
       </div>
-      <div class="control-panel mt-2 border-t border-slate-600/50 pt-2">
+      <div class="control-panel mt-2 border-t border-slate-600/50 pt-2 pixel-group-accent">
         <h2 class="text-base sm:text-lg font-semibold mb-3">全局顯示控制面板</h2>
         <div class="tower-global-row flex gap-2">
           <button id="globalShowEnBtn" class="pill-btn">🇬🇧 英文</button>
@@ -185,7 +200,7 @@
       </div>
     </div>
 
-    <section id="transcriptSection" class="bottom-pane px-4 pb-4 pt-3">
+    <section id="transcriptSection" class="bottom-pane flex-1 overflow-y-auto px-4 pb-4 pt-3">
       <h2 class="text-lg sm:text-xl font-semibold mb-3">所有字幕行</h2>
       <div id="transcriptList" class="space-y-2"></div>
     </section>
@@ -593,6 +608,7 @@
     }
     function playLineWithRate(i, rate) {
       if (!transcript[i]) return;
+      if (!playerReady || !player) return;
       if (rate !== 1) {
         lineRateOverrideActive = true;
         lineRateOverrideFrom = i;
