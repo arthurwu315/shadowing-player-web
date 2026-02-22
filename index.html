@@ -1099,13 +1099,24 @@
       const index = state.subtitles.findIndex((s) => s.id === subtitle.id);
       if (index < 0) return;
 
-      // 更新目前播放句
-      state.currentIndex = index;
+      const isSameSubtitle = state.currentIndex === index;
+      const playerState = (playerReady && player && player.getPlayerState) ? player.getPlayerState() : -1;
 
-      // 如果正在 loop 其他句，取消 loop
-      if (state.loopIndex && state.loopIndex !== subtitle.id) {
-        state.loopIndex = null;
+      if (isSameSubtitle && playerReady && player) {
+        if (playerState === YT.PlayerState.PLAYING) {
+          player.pauseVideo();
+          syncPlayPauseButtons();
+          return;
+        }
+        if (playerState === YT.PlayerState.PAUSED) {
+          player.playVideo();
+          syncPlayPauseButtons();
+          return;
+        }
       }
+
+      state.currentIndex = index;
+      if (state.loopIndex && state.loopIndex !== subtitle.id) state.loopIndex = null;
 
       console.log("PLAY CLICKED:", {
         subtitleId: subtitle.id,
@@ -1113,13 +1124,12 @@
         loopIndex: state.loopIndex
       });
 
-      // 更新 UI
       renderSubtitles();
 
-      // 播放
       if (!playerReady || !player) return;
       player.seekTo(subtitle.start, true);
       player.playVideo();
+      syncPlayPauseButtons();
     }
     function toggleLoop(subtitle) {
       const index = findSubtitleIndexById(subtitle.id);
