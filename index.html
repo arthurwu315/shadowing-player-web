@@ -15,7 +15,7 @@
     body {
       background: #FDFBF7 !important;
       color: #2B2D42 !important;
-      font-family: "Noto Sans TC", "Segoe UI", sans-serif;
+      font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans", "Noto Sans TC", "Noto Sans JP", "Noto Sans KR", sans-serif;
     }
     #app-container { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
     .top-pane { flex: 0 0 auto; max-height: 60vh; overflow: auto; }
@@ -84,6 +84,15 @@
       box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 1);
       padding: 0.5rem;
     }
+    .recent-chip {
+      border: 2px solid #000;
+      background: #ffffff;
+      padding: 0.3rem 0.5rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 1);
+    }
     @media (max-width: 640px) { .control-panel { max-height: 80px; overflow: auto; } }
     .pill-btn {
       min-height: 44px;
@@ -125,7 +134,7 @@
     .bottom-pane::-webkit-scrollbar-track { background: #d9d9d9; border-left: 2px solid #000; }
     .bottom-pane::-webkit-scrollbar-thumb { background: #2f2f2f; border: 2px solid #000; }
     .bottom-pane { scrollbar-color: #2f2f2f #d9d9d9; scrollbar-width: thin; }
-    @media (min-width: 1024px) {
+    @media (min-width: 1280px) {
       .top-pane { max-height: 50vh; }
       .top-pane-inner { max-width: 1100px; margin: 0 auto; width: 100%; }
       #transcriptList { max-width: 56rem; margin: 0 auto; }
@@ -171,6 +180,13 @@
       <div class="mt-3">
         <button id="manualOpenBtn" class="w-full sm:w-auto min-h-12 rounded-xl border border-cyan-400 text-cyan-300 px-4 py-2 hover:bg-cyan-500/10">手動貼上雙語字幕</button>
       </div>
+      <div class="mt-3 border-t border-slate-600/50 pt-3">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="text-base font-semibold">最近練習</h3>
+          <button id="clearRecentBtn" class="min-h-10 rounded-xl border border-rose-500 px-3 py-1 text-sm">刪除紀錄</button>
+        </div>
+        <div id="recentVideos" class="mt-2 flex flex-wrap gap-2"></div>
+      </div>
       <p id="status" class="mt-3 text-sm text-slate-300">尚未載入影片</p>
     </section>
 
@@ -206,13 +222,14 @@
       <div class="control-panel mt-2 border-t border-slate-600/50 pt-2 pixel-group-accent">
         <h2 class="text-base sm:text-lg font-semibold mb-3">全局顯示控制面板</h2>
         <div class="tower-global-row flex gap-2">
-          <button id="globalShowEnBtn" class="pill-btn">🇬🇧 英文</button>
-          <button id="globalShowZhBtn" class="pill-btn">🇨🇳 中文</button>
-          <button id="globalShowBothBtn" class="pill-btn">🌐 雙語</button>
+          <button id="globalShowEnBtn" class="pill-btn">🅰️ L1</button>
+          <button id="globalShowZhBtn" class="pill-btn">🅱️ L2</button>
+          <button id="globalShowBothBtn" class="pill-btn">🌐 L1+L2</button>
           <button id="globalBlurBtn" class="pill-btn">🕶️ 盲聽</button>
           <button id="focusModeBtn" class="pill-btn">🎯 聚焦</button>
           <button id="hidePlayerBtn" class="pill-btn">🎬 隱藏播放器</button>
           <button id="lineRateResetBtn" class="pill-btn">⏩ 下一句回 1x</button>
+          <button id="resetCountsBtn" class="pill-btn">🧹 重設計數</button>
         </div>
       </div>
     </section>
@@ -255,6 +272,8 @@
       urlInput: document.getElementById("urlInput"),
       loadBtn: document.getElementById("loadBtn"),
       manualOpenBtn: document.getElementById("manualOpenBtn"),
+      recentVideos: document.getElementById("recentVideos"),
+      clearRecentBtn: document.getElementById("clearRecentBtn"),
       status: document.getElementById("status"),
       transcriptList: document.getElementById("transcriptList"),
       videoIdText: document.getElementById("videoIdText"),
@@ -272,6 +291,7 @@
       focusModeBtn: document.getElementById("focusModeBtn"),
       hidePlayerBtn: document.getElementById("hidePlayerBtn"),
       lineRateResetBtn: document.getElementById("lineRateResetBtn"),
+      resetCountsBtn: document.getElementById("resetCountsBtn"),
       controlTower: document.getElementById("controlTower"),
       controlPanel: document.getElementById("controlPanel"),
       transcriptSection: document.getElementById("transcriptSection"),
@@ -298,8 +318,9 @@
     let towerCollapsed = false;
     let lastScrollY = 0;
     let playerHidden = false;
-    let trackLabelA = "L1";
-    let trackLabelB = "L2";
+    const trackLabelA = "L1";
+    const trackLabelB = "L2";
+    let recentVideos = [];
 
     const FAIL_MSG = "自動抓取受限，請點擊下方按鈕手動貼入英/中雙語講稿以開始練習";
     const esc = (t) => String(t || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll("\"","&quot;").replaceAll("'","&#039;");
@@ -307,6 +328,7 @@
     const countStorageKey = () => `shadowing-counts:${currentVideoId || "unknown"}`;
     const biStorageKey = () => `shadowing-bilingual:${currentVideoId || "unknown"}`;
     const uiStorageKey = () => `shadowing-ui:${currentVideoId || "unknown"}`;
+    const recentVideosKey = "shadowing-recent-videos";
     const setStatus = (msg, err = false) => {
       ui.status.textContent = msg;
       ui.status.className = "mt-3 text-sm " + (err ? "text-rose-300" : "text-slate-300");
@@ -435,6 +457,48 @@
     function loadCounts() { try { countsByLine = JSON.parse(localStorage.getItem(countStorageKey()) || "{}") || {}; } catch { countsByLine = {}; } }
     function saveCounts() { try { localStorage.setItem(countStorageKey(), JSON.stringify(countsByLine)); } catch {} }
     function saveBilingual() { try { localStorage.setItem(biStorageKey(), JSON.stringify(transcript)); } catch {} }
+    function loadRecentVideos() {
+      try {
+        const raw = JSON.parse(localStorage.getItem(recentVideosKey) || "[]");
+        recentVideos = Array.isArray(raw) ? raw.filter((x) => typeof x === "string" && x) : [];
+      } catch { recentVideos = []; }
+    }
+    function saveRecentVideos() {
+      try { localStorage.setItem(recentVideosKey, JSON.stringify(recentVideos.slice(0, 12))); } catch {}
+    }
+    function touchRecentVideo(videoId) {
+      recentVideos = [videoId, ...recentVideos.filter((x) => x !== videoId)].slice(0, 12);
+      saveRecentVideos();
+      renderRecentVideos();
+    }
+    function removeRecentVideo(videoId) {
+      recentVideos = recentVideos.filter((x) => x !== videoId);
+      saveRecentVideos();
+      renderRecentVideos();
+    }
+    function renderRecentVideos() {
+      ui.recentVideos.innerHTML = "";
+      if (!recentVideos.length) {
+        ui.recentVideos.innerHTML = `<span class="text-sm text-slate-500">尚無練習紀錄</span>`;
+        return;
+      }
+      recentVideos.forEach((id) => {
+        const wrap = document.createElement("div");
+        wrap.className = "recent-chip";
+        wrap.innerHTML = `<button data-recent-load="${id}" class="px-2 py-1 text-sm">${id}</button><button data-recent-delete="${id}" class="px-2 py-1 text-sm">刪除</button>`;
+        ui.recentVideos.appendChild(wrap);
+      });
+      document.querySelectorAll("[data-recent-load]").forEach((btn) => btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-recent-load");
+        ui.urlInput.value = id;
+        loadVideoAndTranscript();
+      }));
+      document.querySelectorAll("[data-recent-delete]").forEach((btn) => btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-recent-delete");
+        if (!confirm(`確定要刪除紀錄 ${id} 嗎？`)) return;
+        removeRecentVideo(id);
+      }));
+    }
     function loadBilingual() {
       try {
         const data = JSON.parse(localStorage.getItem(biStorageKey()) || "[]");
@@ -469,22 +533,7 @@
         if (typeof s.playerHidden === "boolean") playerHidden = s.playerHidden;
       } catch {}
     }
-    function detectTrackLabel(sample, fallback) {
-      const text = String(sample || "");
-      if (!text) return fallback;
-      const cjk = (text.match(/[\u4e00-\u9fff]/g) || []).length;
-      const latin = (text.match(/[A-Za-z]/g) || []).length;
-      if (cjk > latin * 0.6) return "CN";
-      if (latin > cjk) return "EN";
-      return fallback;
-    }
-    function updateTrackLabels() {
-      const sampleA = transcript.find((x) => x.en)?.en || "";
-      const sampleB = transcript.find((x) => x.zh)?.zh || "";
-      trackLabelA = detectTrackLabel(sampleA, "L1");
-      trackLabelB = detectTrackLabel(sampleB, "L2");
-      if (trackLabelA === trackLabelB) { trackLabelA = "L1"; trackLabelB = "L2"; }
-    }
+    function updateTrackLabels() { return; }
     function refreshGlobalButtons() {
       const active = "pill-btn border-cyan-300 bg-cyan-400 text-slate-900 font-semibold";
       const normal = "pill-btn border-slate-600 bg-slate-800";
@@ -544,6 +593,14 @@
       else ui.playerShell.classList.remove("player-hidden");
       saveUiState();
       refreshGlobalButtons();
+    }
+    function resetCurrentVideoCounts() {
+      if (!currentVideoId) return setStatus("尚未載入影片，無法重設計數。", true);
+      if (!confirm("確定要重設此影片的所有句子計數嗎？")) return;
+      countsByLine = {};
+      saveCounts();
+      render();
+      setStatus("已重設目前影片計數。");
     }
 
     function inc(i) {
@@ -783,6 +840,7 @@
       const videoUrl = raw.startsWith("http") ? raw : `https://www.youtube.com/watch?v=${videoId}`;
       currentVideoId = videoId;
       ui.videoIdText.textContent = videoId;
+      touchRecentVideo(videoId);
       ensurePlayer(videoId);
       loadUiState();
       syncTranscriptOffset();
@@ -813,6 +871,13 @@
     ui.focusModeBtn.addEventListener("click", () => setFocusMode(!focusModeEnabled));
     ui.hidePlayerBtn.addEventListener("click", () => setPlayerHidden(!playerHidden));
     ui.lineRateResetBtn.addEventListener("click", () => setAutoResetLineRate(!autoResetLineRate));
+    ui.resetCountsBtn.addEventListener("click", resetCurrentVideoCounts);
+    ui.clearRecentBtn.addEventListener("click", () => {
+      if (!confirm("確定要清空最近練習清單嗎？")) return;
+      recentVideos = [];
+      saveRecentVideos();
+      renderRecentVideos();
+    });
     document.querySelectorAll("[data-rate-btn]").forEach((b) => b.addEventListener("click", () => setRate(Number(b.getAttribute("data-rate-btn")))));
     ui.urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") loadVideoAndTranscript(); });
     ui.transcriptSection.addEventListener("scroll", () => {
@@ -824,6 +889,8 @@
       }
       lastScrollY = y;
     }, { passive: true });
+    loadRecentVideos();
+    renderRecentVideos();
     window.addEventListener("resize", syncTranscriptOffset);
     if (window.visualViewport) window.visualViewport.addEventListener("resize", syncTranscriptOffset);
     syncTranscriptOffset();
