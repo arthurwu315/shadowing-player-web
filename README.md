@@ -68,7 +68,9 @@
 - 左右欄位獨立捲動：`#left-panel` 與 `#subtitle-container` 分離 `overflow-y-auto`，桌機/手機都可穩定滾動不互相卡死。
 - 意圖導向交互：卡片 hover 只做輕微預覽，點擊才觸發解模糊、跳句與置中。
 - 事件委派架構：字幕按鈕由父容器單一 listener 處理，重繪後仍可用、無重複綁定。
-- 事件委派強化：字幕按鈕監聽提升到 `document.body`，並加入 `data-index` 防呆與 debug log。
+- 事件委派強化：字幕按鈕監聽提升到 `document.body`，並加入 `data-id` 防呆與 debug log。
+- 單一狀態來源：字幕、目前播放索引、循環目標、循環次數、主語速統一收斂於 `state` 物件。
+- 字幕識別改為 `data-id`：渲染與事件流使用穩定 `id`，不再依賴可漂移的 `index`。
 - 鍵盤快捷鍵：`Space` 播放/暫停、`←` 上一句、`→` 下一句、`R` 切換當前句循環。
 - 左側分層控制：Playback / Display / System 三區塊，操作路徑更清楚。
 - 主題切換（`🎨 風格`）：可循環切換 `暖系文青`（預設）/ `硬派像素` / `商業專業`，並記憶到 `localStorage`。
@@ -138,6 +140,13 @@
 
 ## 更新紀錄
 
+- 2026-02-22（穩定性重構：右側功能失效修復）
+  - 建立全域 `state`（`subtitles/currentIndex/loopIndex/loopCounts/masterSpeed`）作為單一狀態來源。
+  - 右側字幕按鈕全面改為 `data-action + data-id`，事件委派以 `id` 找回 subtitle，避免重排後 index 錯位。
+  - `renderSubtitles()` 改為純渲染流程（只讀 state 產生 DOM），不再在 render 中綁定按鈕 listener。
+  - 循環邏輯統一：同時間僅一筆循環，播放結束時由 `onSubtitleEnd()` 判斷循環或播放下一句。
+  - 載入新影片時自動清空 `loopCounts/loopIndex/currentIndex`，避免跨影片殘留狀態污染。
+  - 加入除錯 log（`action/id/currentIndex/loopIndex`）以驗證事件流與狀態同步。
 - 2026-02-22（緊急除蟲：事件委派與版面穩定）
   - 將字幕按鈕事件委派提升到 `document.body`，修復重繪後偶發 click 無效問題。
   - 委派流程加入 `data-action` / `data-index` 檢查與 `isNaN` 防呆，並補 `console.debug` 診斷訊息。

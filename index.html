@@ -538,10 +538,17 @@
       manualApplyBtn: document.getElementById("manualApplyBtn")
     };
 
-    let player = null, playerReady = false, transcript = [], currentLineIndex = -1;
-    let activeLoop = null, loopTimer = null, tickTimer = null, autoPauseTimer = null;
+    let player = null, playerReady = false;
+    const state = {
+      subtitles: [],
+      currentIndex: null,
+      loopIndex: null,
+      loopCounts: {},
+      masterSpeed: 1
+    };
+    let loopTimer = null, tickTimer = null, autoPauseTimer = null;
     let autoPauseEnabled = false, autoPauseLockIndex = null, completeLockIndex = null;
-    let currentVideoId = "", countsByLine = {}, currentPlaybackRate = 1;
+    let currentVideoId = "", countsByLine = {};
     let globalLangMode = "both";
     let globalBlurEnabled = false;
     let focusModeEnabled = false;
@@ -571,6 +578,12 @@
       ui.status.textContent = msg;
       ui.status.className = "mt-3 text-sm " + (err ? "text-rose-300" : "text-slate-300");
     };
+    function findSubtitleIndexById(id) {
+      return state.subtitles.findIndex((s) => s.id === id);
+    }
+    function findSubtitleById(id) {
+      return state.subtitles.find((s) => s.id === id) || null;
+    }
     function applyTheme(themeName) {
       const normalized = themeName === "hardcore" || themeName === "business" ? themeName : "warm";
       currentTheme = normalized;
@@ -708,7 +721,7 @@
     }
     function loadCounts() { try { countsByLine = JSON.parse(localStorage.getItem(countStorageKey()) || "{}") || {}; } catch { countsByLine = {}; } }
     function saveCounts() { try { localStorage.setItem(countStorageKey(), JSON.stringify(countsByLine)); } catch {} }
-    function saveBilingual() { try { localStorage.setItem(biStorageKey(), JSON.stringify(transcript)); } catch {} }
+    function saveBilingual() { try { localStorage.setItem(biStorageKey(), JSON.stringify(state.subtitles)); } catch {} }
     function loadRecentVideos() {
       try {
         const raw = JSON.parse(localStorage.getItem(recentVideosKey) || "[]");
@@ -787,12 +800,12 @@
       try {
         const data = JSON.parse(localStorage.getItem(biStorageKey()) || "[]");
         if (!Array.isArray(data) || !data.length) return false;
-        transcript = data.map((x, i) => ({
-          id: i, start: Number(x.start), duration: Math.max(0.8, Number(x.duration || 2.5)),
+        state.subtitles = data.map((x, i) => ({
+          id: String(x.id || `sub-${i}`), start: Number(x.start), duration: Math.max(0.8, Number(x.duration || 2.5)),
           en: String(x.en || ""), zh: String(x.zh || ""),
           showEn: x.showEn !== false, showZh: x.showZh !== false
         })).filter((x) => Number.isFinite(x.start) && (x.en || x.zh));
-        return transcript.length > 0;
+        return state.subtitles.length > 0;
       } catch { return false; }
     }
     function saveUiState() {
@@ -807,7 +820,9 @@
     }
     function saveLastSession(videoId, seconds) {
       if (!videoId) return;
-      const fallbackLineStart = currentLineIndex >= 0 && transcript[currentLineIndex] ? Number(transcript[currentLineIndex].start || 0) : 0;
+      const fallbackLineStart = Number.isInteger(state.currentIndex) && state.currentIndex >= 0 && state.subtitles[state.currentIndex]
+        ? Number(state.subtitles[state.currentIndex].start || 0)
+        : 0;
       const payload = {
         videoId,
         seconds: Math.max(0, Number(seconds || 0)),
@@ -877,7 +892,7 @@
     }
     function applyGlobalLang(mode) {
       globalLangMode = mode;
-      transcript = transcript.map((line) => ({
+      state.subtitles = state.subtitles.map((line) => ({
         ...line,
         showEn: mode === "en" || mode === "both",
         showZh: mode === "zh" || mode === "both"
@@ -931,18 +946,18 @@
     }
 
     function inc(i) {
-      const line = transcript[i];
+      const line = state.subtitles[i];
       if (!line) return;
       const k = countKey(line);
       countsByLine[k] = Number(countsByLine[k] || 0) + 1;
       saveCounts();
-      const n = document.querySelector(`[data-count-label="${i}"]`);
+      const n = document.querySelector(`[data-count-label="${line.id}"]`);
       if (n) n.textContent = `${countsByLine[k]} 次`;
     }
-    function findIdx(t) { for (let i = transcript.length - 1; i >= 0; i -= 1) if (t >= transcript[i].start) return i; return -1; }
+    function findIdx(t) { for (let i = state.subtitles.length - 1; i >= 0; i -= 1) if (t >= state.subtitles[i].start) return i; return -1; }
     function applyCurrentHighlight() {
       document.querySelectorAll("[data-line]").forEach((r) => r.classList.remove("is-current", "active"));
-      const row = document.querySelector(`[data-line="${currentLineIndex}"]`);
+      const row = document.querySelector(`[data-line="${state.currentIndex}"]`);
       if (row) row.classList.add("is-current", "active");
     }
     function setIntentReveal(i) {
@@ -952,14 +967,14 @@
       if (row) row.classList.add("intent-reveal");
     }
     function scrollCurrentIntoCenter() {
-      const currentCard = document.querySelector(`[data-line="${currentLineIndex}"]`);
+      const currentCard = document.querySelector(`[data-line="${state.currentIndex}"]`);
       if (!currentCard) return;
       currentCard.scrollIntoView({ behavior: "smooth", block: "center" });
     }
     function syncTranscriptOffset() { ui.transcriptSection.style.paddingTop = "12px"; }
     function setCurrent(i) {
-      const changed = i !== currentLineIndex;
-      currentLineIndex = i;
+      const changed = i !== state.currentIndex;
+      state.currentIndex = i;
       ui.currentLineText.textContent = i >= 0 ? String(i + 1) : "-";
       setIntentReveal(i);
       if (focusModeEnabled) render();
@@ -968,14 +983,14 @@
       if (changed && i >= 0) scrollCurrentIntoCenter();
     }
     function clearLoop() {
-      activeLoop = null;
+      state.loopIndex = null;
       if (loopTimer) clearInterval(loopTimer);
       loopTimer = null;
       document.querySelectorAll('[data-action="loop"]').forEach((b) => { b.textContent = "↻ 循環"; });
     }
     function clearAutoPause() { if (autoPauseTimer) clearTimeout(autoPauseTimer); autoPauseTimer = null; autoPauseLockIndex = null; }
     function jumpTo(i, opt = {}) {
-      const line = transcript[i];
+      const line = state.subtitles[i];
       if (!line || !playerReady || !player) return;
       if (opt.increment) inc(i);
       if (opt.clearLoopFirst !== false) clearLoop();
@@ -986,24 +1001,27 @@
       player.playVideo();
     }
     function loopLine(i) {
-      const line = transcript[i];
+      const line = state.subtitles[i];
       if (!line || !playerReady || !player) return;
-      activeLoop = { index: i, start: line.start, end: line.start + line.duration };
+      state.loopIndex = line.id;
       jumpTo(i, { increment: true, clearLoopFirst: false });
       let counted = false;
       clearInterval(loopTimer);
       loopTimer = setInterval(() => {
+        const loopSubtitle = findSubtitleById(state.loopIndex);
+        if (!loopSubtitle) return;
         const t = player.getCurrentTime();
-        if (t < activeLoop.start + 0.12) counted = false;
-        if (t >= activeLoop.end - 0.05) {
+        if (t < loopSubtitle.start + 0.12) counted = false;
+        if (t >= loopSubtitle.start + loopSubtitle.duration - 0.05) {
           if (!counted) { inc(i); counted = true; }
-          player.seekTo(activeLoop.start, true);
+          state.loopCounts[loopSubtitle.id] = (state.loopCounts[loopSubtitle.id] || 0) + 1;
+          player.seekTo(loopSubtitle.start, true);
           player.playVideo();
         }
       }, 140);
     }
     function setRate(rate) {
-      currentPlaybackRate = rate;
+      state.masterSpeed = rate;
       if (playerReady && player) player.setPlaybackRate(rate);
       document.querySelectorAll("[data-rate-btn]").forEach((b) => {
         const on = Number(b.getAttribute("data-rate-btn")) === rate;
@@ -1024,19 +1042,20 @@
     function syncPlayPauseButtons() {
       const playing = isPlayerPlaying();
       document.querySelectorAll('[data-action="play"]').forEach((btn) => {
-        const i = Number(btn.getAttribute("data-index"));
-        const isCurrent = i === currentLineIndex;
+        const id = btn.getAttribute("data-id");
+        const i = findSubtitleIndexById(id);
+        const isCurrent = i === state.currentIndex;
         btn.textContent = isCurrent && playing ? "⏸️ 暫停" : "▶️ 播放";
       });
       document.querySelectorAll('[data-action="loop"]').forEach((btn) => {
-        const i = Number(btn.getAttribute("data-index"));
-        btn.textContent = activeLoop && activeLoop.index === i ? "↻ 取消" : "↻ 循環";
+        const id = btn.getAttribute("data-id");
+        btn.textContent = state.loopIndex === id ? "↻ 取消" : "↻ 循環";
       });
       ui.topPlayPauseBtn.textContent = playing ? "⏸️ 暫停" : "▶️ 播放";
     }
     function toggleLinePlayback(i) {
-      if (!playerReady || !player || !transcript[i]) return;
-      if (currentLineIndex !== i) {
+      if (!playerReady || !player || !state.subtitles[i]) return;
+      if (state.currentIndex !== i) {
         jumpTo(i, { increment: true });
         syncPlayPauseButtons();
         return;
@@ -1052,43 +1071,69 @@
       syncPlayPauseButtons();
     }
     function getActiveLineIndex() {
-      if (currentLineIndex >= 0 && transcript[currentLineIndex]) return currentLineIndex;
-      return transcript.length ? 0 : -1;
+      if (Number.isInteger(state.currentIndex) && state.currentIndex >= 0 && state.subtitles[state.currentIndex]) return state.currentIndex;
+      return state.subtitles.length ? 0 : -1;
     }
     function togglePlay() {
       const i = getActiveLineIndex();
       if (i >= 0) toggleLinePlayback(i);
     }
     function playPrevious() {
-      if (!transcript.length) return;
-      jumpTo(Math.max(0, (currentLineIndex >= 0 ? currentLineIndex : 0) - 1), { increment: true });
+      if (!state.subtitles.length) return;
+      const base = Number.isInteger(state.currentIndex) && state.currentIndex >= 0 ? state.currentIndex : 0;
+      jumpTo(Math.max(0, base - 1), { increment: true });
     }
     function playNext() {
-      if (!transcript.length) return;
-      jumpTo(Math.min(transcript.length - 1, (currentLineIndex >= 0 ? currentLineIndex : 0) + 1), { increment: true });
+      if (!state.subtitles.length) return;
+      const base = Number.isInteger(state.currentIndex) && state.currentIndex >= 0 ? state.currentIndex : 0;
+      jumpTo(Math.min(state.subtitles.length - 1, base + 1), { increment: true });
     }
     function toggleCurrentLoop() {
       const i = getActiveLineIndex();
       if (i < 0) return;
-      if (activeLoop && activeLoop.index === i) clearLoop();
+      if (state.loopIndex && state.loopIndex === state.subtitles[i]?.id) clearLoop();
       else { clearLoop(); clearAutoPause(); loopLine(i); }
       syncPlayPauseButtons();
     }
-    function jumpToSubtitle(index) { jumpTo(index, { increment: true }); }
-    function playSubtitle(index) { toggleLinePlayback(index); }
-    function toggleLoop(index) {
-      if (activeLoop && activeLoop.index === index) clearLoop();
+    function jumpToSubtitle(subtitle) {
+      const index = findSubtitleIndexById(subtitle.id);
+      if (index < 0) return;
+      jumpTo(index, { increment: true });
+    }
+    function playSubtitle(subtitle) {
+      const index = findSubtitleIndexById(subtitle.id);
+      if (index < 0) return;
+      state.currentIndex = index;
+      if (state.loopIndex !== subtitle.id) state.loopIndex = null;
+      toggleLinePlayback(index);
+    }
+    function toggleLoop(subtitle) {
+      const index = findSubtitleIndexById(subtitle.id);
+      if (index < 0) return;
+      if (state.loopIndex === subtitle.id) clearLoop();
       else { clearLoop(); clearAutoPause(); loopLine(index); }
       syncPlayPauseButtons();
     }
+    function onSubtitleEnd() {
+      if (state.loopIndex) {
+        const subtitle = findSubtitleById(state.loopIndex);
+        if (subtitle) {
+          state.loopCounts[subtitle.id] = (state.loopCounts[subtitle.id] || 0) + 1;
+          player.seekTo(subtitle.start, true);
+          player.playVideo();
+          return;
+        }
+      }
+      playNext();
+    }
     function render() {
       ui.transcriptList.innerHTML = "";
-      ui.countText.textContent = String(transcript.length);
-      if (!transcript.length) { ui.transcriptList.innerHTML = `<div class="rounded-xl border border-slate-700 bg-card p-4 text-slate-300">沒有可顯示的字幕。</div>`; return; }
-      transcript.forEach((line, i) => {
-        const hiddenClass = focusModeEnabled && i !== currentLineIndex ? " hidden" : "";
+      ui.countText.textContent = String(state.subtitles.length);
+      if (!state.subtitles.length) { ui.transcriptList.innerHTML = `<div class="rounded-xl border border-slate-700 bg-card p-4 text-slate-300">沒有可顯示的字幕。</div>`; return; }
+      state.subtitles.forEach((line, i) => {
+        const hiddenClass = focusModeEnabled && i !== state.currentIndex ? " hidden" : "";
         const count = Number(countsByLine[countKey(line)] || 0);
-        const isCurrent = i === currentLineIndex;
+        const isCurrent = i === state.currentIndex;
         const enVisible = (line.showEn || isCurrent) && line.en;
         const zhVisible = (line.showZh || isCurrent) && line.zh;
         const enBlock = enVisible ? `<div class="text-l1 subtitle-text text-left w-full rounded-xl border border-slate-600 bg-slate-900/70 px-4 py-3 text-base leading-relaxed text-slate-100">${esc(line.en)}</div>` : "";
@@ -1097,13 +1142,8 @@
         const row = document.createElement("div");
         row.className = `subtitle-row subtitle-card rounded-xl border border-slate-700 bg-line/70 p-2.5 sm:p-3${hiddenClass}`;
         row.setAttribute("data-line", String(i));
-        row.innerHTML = `<div class="subtitle-meta"><button data-action="jump" data-index="${i}" class="timestamp btn-secondary min-h-10 px-3 py-1.5 text-sm">${fmt(line.start)}</button><span data-count-label="${i}" class="text-xs text-slate-500">x ${count}</span></div><div class="subtitle-content flex flex-col gap-2">${zhBlock}${enBlock}</div><div class="subtitle-actions mt-2"><button data-action="play" data-index="${i}" class="btn-primary min-h-10 px-4 text-sm">${playPauseLabel}</button><button data-action="loop" data-index="${i}" class="btn-secondary min-h-10 px-4 text-sm">${activeLoop && activeLoop.index === i ? "↻ 取消" : "↻ 循環"}</button></div>`;
-        row.addEventListener("click", (event) => {
-          const target = event.target;
-          if (target && target.closest && target.closest("button")) return;
-          setIntentReveal(i);
-          jumpTo(i, { increment: true });
-        });
+        row.setAttribute("data-id", line.id);
+        row.innerHTML = `<div class="subtitle-meta"><button data-action="jump" data-id="${line.id}" class="timestamp btn-secondary min-h-10 px-3 py-1.5 text-sm">${fmt(line.start)}</button><span data-count-label="${line.id}" class="text-xs text-slate-500">x ${count}</span></div><div class="subtitle-content flex flex-col gap-2">${zhBlock}${enBlock}</div><div class="subtitle-actions mt-2"><button data-action="play" data-id="${line.id}" class="btn-primary min-h-10 px-4 text-sm">${playPauseLabel}</button><button data-action="loop" data-id="${line.id}" class="btn-secondary min-h-10 px-4 text-sm">${state.loopIndex === line.id ? "↻ 取消" : "↻ 循環"}</button></div>`;
         ui.transcriptList.appendChild(row);
       });
       if (intentRevealIndex >= 0) setIntentReveal(intentRevealIndex);
@@ -1112,7 +1152,7 @@
     }
 
     function tick() {
-      if (!playerReady || !player || !transcript.length) return;
+      if (!playerReady || !player || !state.subtitles.length) return;
       const t = player.getCurrentTime();
       const now = Date.now();
       if (now - lastProgressSaveAt > 1000) {
@@ -1120,25 +1160,29 @@
         lastProgressSaveAt = now;
       }
       const i = findIdx(t);
-      if (i >= 0 && i !== currentLineIndex) setCurrent(i);
+      if (i >= 0 && i !== state.currentIndex) setCurrent(i);
       syncPlayPauseButtons();
-      if (!activeLoop && i >= 0) {
-        const end = transcript[i].start + transcript[i].duration;
-        if (t >= end - 0.05 && completeLockIndex !== i) { completeLockIndex = i; inc(i); }
+      if (!state.loopIndex && i >= 0) {
+        const end = state.subtitles[i].start + state.subtitles[i].duration;
+        if (t >= end - 0.05 && completeLockIndex !== i) {
+          completeLockIndex = i;
+          inc(i);
+          if (!autoPauseEnabled) onSubtitleEnd();
+        }
         if (t < end - 0.2) completeLockIndex = null;
       }
-      if (!autoPauseEnabled || activeLoop || i < 0) return;
+      if (!autoPauseEnabled || state.loopIndex || i < 0) return;
       if (player.getPlayerState && player.getPlayerState() !== YT.PlayerState.PLAYING) return;
-      const end = transcript[i].start + transcript[i].duration;
+      const end = state.subtitles[i].start + state.subtitles[i].duration;
       if (t >= end - 0.05 && autoPauseLockIndex !== i) {
         autoPauseLockIndex = i;
         player.pauseVideo();
-        const waitMs = Math.max(400, transcript[i].duration * 1200);
+        const waitMs = Math.max(400, state.subtitles[i].duration * 1200);
         clearTimeout(autoPauseTimer);
         autoPauseTimer = setTimeout(() => {
           if (!autoPauseEnabled) return;
           const n = i + 1;
-          if (n >= transcript.length) return setStatus("Auto-Pause 已播到最後一句。");
+          if (n >= state.subtitles.length) return setStatus("Auto-Pause 已播到最後一句。");
           jumpTo(n, { increment: false });
         }, waitMs);
       }
@@ -1150,10 +1194,10 @@
       const zhParsed = parseScript(ui.manualZhInput.value, sec);
       const aligned = alignBilingual(enParsed, zhParsed, sec);
       if (!aligned.length) return setStatus("手動字幕格式無法解析，請檢查內容。", true);
-      transcript = aligned;
+      state.subtitles = aligned.map((line, i) => ({ ...line, id: line.id || `sub-${i}` }));
       updateTrackLabels();
-      clearLoop(); clearAutoPause(); completeLockIndex = null; currentLineIndex = -1;
-      loadCounts(); saveBilingual(); render(); setRate(currentPlaybackRate); setStatus("已套用雙語字幕。");
+      clearLoop(); clearAutoPause(); completeLockIndex = null; state.currentIndex = null; state.loopCounts = {};
+      loadCounts(); saveBilingual(); render(); setRate(state.masterSpeed); setStatus("已套用雙語字幕。");
     }
 
     async function loadVideoAndTranscript() {
@@ -1174,35 +1218,36 @@
       setSidebarHidden(sidebarHidden);
       refreshGlobalButtons();
       setGlobalBlur(globalBlurEnabled);
-      clearLoop(); clearAutoPause(); completeLockIndex = null; currentLineIndex = -1;
+      clearLoop(); clearAutoPause(); completeLockIndex = null; state.currentIndex = null; state.loopCounts = {};
       if (loadBilingual()) {
         updateTrackLabels();
         loadCounts();
         renderSubtitles();
-        setRate(currentPlaybackRate);
+        setRate(state.masterSpeed);
         applyPendingResume(videoId);
         setStatus("已回復此影片的雙語字幕與顯示設定。");
         return;
       }
       setStatus("正在載入字幕...");
       try {
-        transcript = await fetchTranscript(videoUrl, videoId);
+        const raw = await fetchTranscript(videoUrl, videoId);
+        state.subtitles = raw.map((line, i) => ({ ...line, id: line.id || `sub-${i}` }));
         updateTrackLabels();
         loadCounts();
         saveBilingual();
         renderSubtitles();
-        setRate(currentPlaybackRate);
+        setRate(state.masterSpeed);
         applyPendingResume(videoId);
         setStatus("字幕載入成功。");
       }
-      catch { transcript = []; renderSubtitles(); setStatus(FAIL_MSG, true); alert(FAIL_MSG); }
+      catch { state.subtitles = []; renderSubtitles(); setStatus(FAIL_MSG, true); alert(FAIL_MSG); }
     }
 
     window.onYouTubeIframeAPIReady = () => {
       playerReady = true;
       clearInterval(tickTimer);
       tickTimer = setInterval(tick, 100);
-      setRate(currentPlaybackRate);
+      setRate(state.masterSpeed);
       if (pendingAutoLoadVideoId) {
         ui.urlInput.value = pendingAutoLoadVideoId;
         loadVideoAndTranscript();
@@ -1214,7 +1259,7 @@
     ui.manualApplyBtn.addEventListener("click", () => { applyManual(); ui.manualDialog.close(); });
     ui.stopLoopBtn.addEventListener("click", () => { clearLoop(); clearAutoPause(); });
     ui.prevBtn.addEventListener("click", playPrevious);
-    ui.replayBtn.addEventListener("click", () => { if (transcript.length) jumpTo(currentLineIndex >= 0 ? currentLineIndex : 0, { increment: true }); });
+    ui.replayBtn.addEventListener("click", () => { if (state.subtitles.length) jumpTo(Number.isInteger(state.currentIndex) && state.currentIndex >= 0 ? state.currentIndex : 0, { increment: true }); });
     ui.nextBtn.addEventListener("click", playNext);
     ui.autoPauseToggle.addEventListener("change", (e) => { autoPauseEnabled = Boolean(e.target.checked); clearAutoPause(); setStatus(autoPauseEnabled ? "Auto-Pause 已開啟" : "Auto-Pause 已關閉"); });
     ui.globalShowEnBtn.addEventListener("click", () => applyGlobalLang("en"));
@@ -1234,16 +1279,23 @@
     document.body.addEventListener("click", function (e) {
       const btn = e.target.closest("[data-action]");
       if (!btn) return;
-      const index = parseInt(btn.dataset.index, 10);
+      const id = btn.dataset.id;
       const action = btn.dataset.action;
-      if (isNaN(index)) return;
-      console.debug("[subtitle-action]", { action, index });
+      const subtitle = findSubtitleById(id);
+      if (!subtitle) return;
+      console.log({
+        action,
+        id,
+        currentIndex: state.currentIndex,
+        loopIndex: state.loopIndex
+      });
       if (action === "jump") {
-        setIntentReveal(index);
-        jumpToSubtitle(index);
+        const idx = findSubtitleIndexById(id);
+        setIntentReveal(idx);
+        jumpToSubtitle(subtitle);
       }
-      if (action === "play") playSubtitle(index);
-      if (action === "loop") toggleLoop(index);
+      if (action === "play") playSubtitle(subtitle);
+      if (action === "loop") toggleLoop(subtitle);
     });
     ui.historyToggleBtn.addEventListener("click", () => {
       if (isMobileLayout()) {
