@@ -71,6 +71,7 @@
 - 事件委派強化：字幕按鈕監聽提升到 `document.body`，並加入 `data-id` 防呆與 debug log。
 - 單一狀態來源：字幕、目前播放索引、循環目標、循環次數、主語速統一收斂於 `state` 物件。
 - 字幕識別改為 `data-id`：渲染與事件流使用穩定 `id`，不再依賴可漂移的 `index`。
+- 語言顯示狀態集中化：`state.displayMode`（`L1/L2/both`）控制字幕顯示，切換語言不影響播放索引。
 - 鍵盤快捷鍵：`Space` 播放/暫停、`←` 上一句、`→` 下一句、`R` 切換當前句循環。
 - 左側分層控制：Playback / Display / System 三區塊，操作路徑更清楚。
 - 主題切換（`🎨 風格`）：可循環切換 `暖系文青`（預設）/ `硬派像素` / `商業專業`，並記憶到 `localStorage`。
@@ -140,6 +141,11 @@
 
 ## 更新紀錄
 
+- 2026-02-22（語言切換 active 穩定修復）
+  - 新增 `state.displayMode` 作為語言顯示唯一來源，支援 `L1/L2/both`。
+  - 語言切換 handler 改為只更新 `displayMode` 並重新 render，不重設 `currentIndex/loopIndex`。
+  - `renderSubtitles()` 依 `state.currentIndex + state.displayMode` 純渲染 active 與文字區塊。
+  - 修復播放中切換語言時 active 卡片消失、錯句高亮或跳回第一句的狀況。
 - 2026-02-22（穩定性重構：右側功能失效修復）
   - 建立全域 `state`（`subtitles/currentIndex/loopIndex/loopCounts/masterSpeed`）作為單一狀態來源。
   - 右側字幕按鈕全面改為 `data-action + data-id`，事件委派以 `id` 找回 subtitle，避免重排後 index 錯位。

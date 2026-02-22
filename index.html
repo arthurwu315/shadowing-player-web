@@ -544,12 +544,12 @@
       currentIndex: null,
       loopIndex: null,
       loopCounts: {},
-      masterSpeed: 1
+      masterSpeed: 1,
+      displayMode: "both" // "L1" | "L2" | "both"
     };
     let loopTimer = null, tickTimer = null, autoPauseTimer = null;
     let autoPauseEnabled = false, autoPauseLockIndex = null, completeLockIndex = null;
     let currentVideoId = "", countsByLine = {};
-    let globalLangMode = "both";
     let globalBlurEnabled = false;
     let focusModeEnabled = false;
     let towerCollapsed = false;
@@ -810,7 +810,7 @@
     }
     function saveUiState() {
       const payload = {
-        langMode: globalLangMode,
+        displayMode: state.displayMode,
         blur: globalBlurEnabled,
         focus: focusModeEnabled,
         playerHidden,
@@ -850,7 +850,10 @@
     function loadUiState() {
       try {
         const s = JSON.parse(localStorage.getItem(uiStorageKey()) || "{}");
-        if (s.langMode === "en" || s.langMode === "zh" || s.langMode === "both" || s.langMode === "custom") globalLangMode = s.langMode;
+        if (s.displayMode === "L1" || s.displayMode === "L2" || s.displayMode === "both") state.displayMode = s.displayMode;
+        else if (s.langMode === "en") state.displayMode = "L1";
+        else if (s.langMode === "zh") state.displayMode = "L2";
+        else if (s.langMode === "both") state.displayMode = "both";
         if (typeof s.blur === "boolean") globalBlurEnabled = s.blur;
         if (typeof s.focus === "boolean") focusModeEnabled = s.focus;
         if (typeof s.playerHidden === "boolean") playerHidden = s.playerHidden;
@@ -872,9 +875,9 @@
     function refreshGlobalButtons() {
       const active = "pill-btn border-cyan-300 bg-cyan-400 text-slate-900 font-semibold";
       const normal = "pill-btn border-slate-600 bg-slate-800";
-      ui.globalShowEnBtn.className = globalLangMode === "en" ? active : normal;
-      ui.globalShowZhBtn.className = globalLangMode === "zh" ? active : normal;
-      ui.globalShowBothBtn.className = globalLangMode === "both" ? active : normal;
+      ui.globalShowEnBtn.className = state.displayMode === "L1" ? active : normal;
+      ui.globalShowZhBtn.className = state.displayMode === "L2" ? active : normal;
+      ui.globalShowBothBtn.className = state.displayMode === "both" ? active : normal;
       ui.globalBlurBtn.className = globalBlurEnabled ? active : normal;
       ui.focusModeBtn.className = focusModeEnabled ? active : normal;
       ui.hidePlayerBtn.className = playerHidden ? active : normal;
@@ -890,14 +893,9 @@
       else ui.controlTower.classList.remove("compact");
       syncTranscriptOffset();
     }
-    function applyGlobalLang(mode) {
-      globalLangMode = mode;
-      state.subtitles = state.subtitles.map((line) => ({
-        ...line,
-        showEn: mode === "en" || mode === "both",
-        showZh: mode === "zh" || mode === "both"
-      }));
-      saveBilingual();
+    function applyDisplayMode(mode) {
+      if (mode !== "L1" && mode !== "L2" && mode !== "both") return;
+      state.displayMode = mode;
       saveUiState();
       refreshGlobalButtons();
       render();
@@ -956,9 +954,7 @@
     }
     function findIdx(t) { for (let i = state.subtitles.length - 1; i >= 0; i -= 1) if (t >= state.subtitles[i].start) return i; return -1; }
     function applyCurrentHighlight() {
-      document.querySelectorAll("[data-line]").forEach((r) => r.classList.remove("is-current", "active"));
-      const row = document.querySelector(`[data-line="${state.currentIndex}"]`);
-      if (row) row.classList.add("is-current", "active");
+      return;
     }
     function setIntentReveal(i) {
       intentRevealIndex = i;
@@ -977,8 +973,7 @@
       state.currentIndex = i;
       ui.currentLineText.textContent = i >= 0 ? String(i + 1) : "-";
       setIntentReveal(i);
-      if (focusModeEnabled) render();
-      else applyCurrentHighlight();
+      renderSubtitles();
       syncPlayPauseButtons();
       if (changed && i >= 0) scrollCurrentIntoCenter();
     }
@@ -1131,16 +1126,19 @@
       ui.countText.textContent = String(state.subtitles.length);
       if (!state.subtitles.length) { ui.transcriptList.innerHTML = `<div class="rounded-xl border border-slate-700 bg-card p-4 text-slate-300">沒有可顯示的字幕。</div>`; return; }
       state.subtitles.forEach((line, i) => {
-        const hiddenClass = focusModeEnabled && i !== state.currentIndex ? " hidden" : "";
-        const count = Number(countsByLine[countKey(line)] || 0);
         const isCurrent = i === state.currentIndex;
-        const enVisible = (line.showEn || isCurrent) && line.en;
-        const zhVisible = (line.showZh || isCurrent) && line.zh;
+        const hiddenClass = focusModeEnabled && !isCurrent ? " hidden" : "";
+        const activeClass = isCurrent ? " active is-current" : "";
+        const count = Number(countsByLine[countKey(line)] || 0);
+        const showL1 = state.displayMode === "L1" || state.displayMode === "both";
+        const showL2 = state.displayMode === "L2" || state.displayMode === "both";
+        const enVisible = showL1 && line.en;
+        const zhVisible = showL2 && line.zh;
         const enBlock = enVisible ? `<div class="text-l1 subtitle-text text-left w-full rounded-xl border border-slate-600 bg-slate-900/70 px-4 py-3 text-base leading-relaxed text-slate-100">${esc(line.en)}</div>` : "";
         const zhBlock = zhVisible ? `<div class="text-l2 subtitle-text text-left w-full rounded-xl border border-slate-700 bg-slate-800/70 px-4 py-3 text-base leading-relaxed text-sky-200">${esc(line.zh)}</div>` : "";
         const playPauseLabel = isCurrent && isPlayerPlaying() ? "⏸️ 暫停" : "▶️ 播放";
         const row = document.createElement("div");
-        row.className = `subtitle-row subtitle-card rounded-xl border border-slate-700 bg-line/70 p-2.5 sm:p-3${hiddenClass}`;
+        row.className = `subtitle-row subtitle-card rounded-xl border border-slate-700 bg-line/70 p-2.5 sm:p-3${hiddenClass}${activeClass}`;
         row.setAttribute("data-line", String(i));
         row.setAttribute("data-id", line.id);
         row.innerHTML = `<div class="subtitle-meta"><button data-action="jump" data-id="${line.id}" class="timestamp btn-secondary min-h-10 px-3 py-1.5 text-sm">${fmt(line.start)}</button><span data-count-label="${line.id}" class="text-xs text-slate-500">x ${count}</span></div><div class="subtitle-content flex flex-col gap-2">${zhBlock}${enBlock}</div><div class="subtitle-actions mt-2"><button data-action="play" data-id="${line.id}" class="btn-primary min-h-10 px-4 text-sm">${playPauseLabel}</button><button data-action="loop" data-id="${line.id}" class="btn-secondary min-h-10 px-4 text-sm">${state.loopIndex === line.id ? "↻ 取消" : "↻ 循環"}</button></div>`;
@@ -1262,9 +1260,9 @@
     ui.replayBtn.addEventListener("click", () => { if (state.subtitles.length) jumpTo(Number.isInteger(state.currentIndex) && state.currentIndex >= 0 ? state.currentIndex : 0, { increment: true }); });
     ui.nextBtn.addEventListener("click", playNext);
     ui.autoPauseToggle.addEventListener("change", (e) => { autoPauseEnabled = Boolean(e.target.checked); clearAutoPause(); setStatus(autoPauseEnabled ? "Auto-Pause 已開啟" : "Auto-Pause 已關閉"); });
-    ui.globalShowEnBtn.addEventListener("click", () => applyGlobalLang("en"));
-    ui.globalShowZhBtn.addEventListener("click", () => applyGlobalLang("zh"));
-    ui.globalShowBothBtn.addEventListener("click", () => applyGlobalLang("both"));
+    ui.globalShowEnBtn.addEventListener("click", () => applyDisplayMode("L1"));
+    ui.globalShowZhBtn.addEventListener("click", () => applyDisplayMode("L2"));
+    ui.globalShowBothBtn.addEventListener("click", () => applyDisplayMode("both"));
     ui.globalBlurBtn.addEventListener("click", () => setGlobalBlur(!globalBlurEnabled));
     ui.focusModeBtn.addEventListener("click", () => setFocusMode(!focusModeEnabled));
     ui.hidePlayerBtn.addEventListener("click", () => setPlayerHidden(!playerHidden));
