@@ -543,6 +543,7 @@
       subtitles: [],
       currentIndex: null,
       loopIndex: null,
+      loopModeEnabled: false,
       loopCounts: {},
       masterSpeed: 1,
       displayMode: "both" // "L1" | "L2" | "both"
@@ -978,6 +979,7 @@
       if (changed && i >= 0) scrollCurrentIntoCenter();
     }
     function clearLoop() {
+      state.loopModeEnabled = false;
       state.loopIndex = null;
       if (loopTimer) clearInterval(loopTimer);
       loopTimer = null;
@@ -988,7 +990,11 @@
       const line = state.subtitles[i];
       if (!line || !playerReady || !player) return;
       if (opt.increment) inc(i);
-      if (opt.clearLoopFirst !== false) clearLoop();
+      if (state.loopModeEnabled) {
+        state.loopIndex = line.id;
+      } else if (opt.clearLoopFirst !== false) {
+        clearLoop();
+      }
       clearAutoPause();
       completeLockIndex = null;
       setCurrent(i);
@@ -998,6 +1004,7 @@
     function loopLine(i) {
       const line = state.subtitles[i];
       if (!line || !playerReady || !player) return;
+      state.loopModeEnabled = true;
       state.loopIndex = line.id;
       jumpTo(i, { increment: true, clearLoopFirst: false });
       let counted = false;
@@ -1044,7 +1051,7 @@
       });
       document.querySelectorAll('[data-action="loop"]').forEach((btn) => {
         const id = btn.getAttribute("data-id");
-        btn.textContent = state.loopIndex === id ? "↻ 取消" : "↻ 循環";
+        btn.textContent = state.loopModeEnabled && state.loopIndex === id ? "↻ 取消" : "↻ 循環";
       });
       ui.topPlayPauseBtn.textContent = playing ? "⏸️ 暫停" : "▶️ 播放";
     }
@@ -1086,7 +1093,7 @@
     function toggleCurrentLoop() {
       const i = getActiveLineIndex();
       if (i < 0) return;
-      if (state.loopIndex && state.loopIndex === state.subtitles[i]?.id) clearLoop();
+      if (state.loopModeEnabled && state.loopIndex && state.loopIndex === state.subtitles[i]?.id) clearLoop();
       else { clearLoop(); clearAutoPause(); loopLine(i); }
       syncPlayPauseButtons();
     }
@@ -1116,7 +1123,8 @@
       }
 
       state.currentIndex = index;
-      if (state.loopIndex && state.loopIndex !== subtitle.id) state.loopIndex = null;
+      if (state.loopModeEnabled) state.loopIndex = subtitle.id;
+      else if (state.loopIndex && state.loopIndex !== subtitle.id) state.loopIndex = null;
 
       console.log("PLAY CLICKED:", {
         subtitleId: subtitle.id,
@@ -1134,15 +1142,17 @@
     function toggleLoop(subtitle) {
       const index = findSubtitleIndexById(subtitle.id);
       if (index < 0) return;
-      if (state.loopIndex === subtitle.id) clearLoop();
+      if (state.loopModeEnabled && state.loopIndex === subtitle.id) clearLoop();
       else { clearLoop(); clearAutoPause(); loopLine(index); }
       syncPlayPauseButtons();
     }
     function onSubtitleEnd() {
-      if (state.loopIndex && state.loopIndex !== state.subtitles[state.currentIndex]?.id) {
+      if (state.loopModeEnabled && state.subtitles[state.currentIndex]) {
+        state.loopIndex = state.subtitles[state.currentIndex].id;
+      } else if (state.loopIndex && state.loopIndex !== state.subtitles[state.currentIndex]?.id) {
         state.loopIndex = null;
       }
-      if (state.loopIndex) {
+      if (state.loopModeEnabled && state.loopIndex) {
         const subtitle = findSubtitleById(state.loopIndex);
         if (subtitle) {
           state.loopCounts[subtitle.id] = (state.loopCounts[subtitle.id] || 0) + 1;
