@@ -22,10 +22,15 @@
     section, dialog, .subtitle-row, button, .pill-btn, input, textarea, label {
       border-radius: 0 !important;
       border: 2px solid #000 !important;
-      box-shadow: 4px 4px 0 0 rgba(0, 0, 0, 1) !important;
+      box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 1) !important;
     }
     section, dialog, .subtitle-row, label { background: rgba(255, 255, 255, 0.82) !important; }
     input, textarea { background: #fffdf9 !important; color: #2B2D42 !important; }
+    button, .pill-btn, .subtitle-text, label, p, .text-sm, .text-base {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif !important;
+      font-size: max(16px, 1rem) !important;
+      line-height: 1.6 !important;
+    }
     button, .pill-btn {
       transition: transform 120ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
       background: #A3B18A !important;
@@ -36,12 +41,14 @@
       transform: translate(1px, 1px) scale(0.95);
       box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 1) !important;
     }
-    #loadBtn, #replayBtn, [data-rate-btn], [data-line-rate], #globalShowBothBtn, #globalBlurBtn { background: #83C5BE !important; }
-    #stopLoopBtn, [data-loop-btn], #manualCancelBtn { background: #E29578 !important; }
+    #loadBtn, #prevBtn, #replayBtn, #nextBtn, [data-rate-btn], [data-line-rate], [data-playpause-btn], [data-jump-btn] { background: #A3B18A !important; }
+    #globalShowEnBtn, #globalShowZhBtn, #globalShowBothBtn, [data-toggle-en], [data-toggle-zh] { background: #83C5BE !important; }
+    #stopLoopBtn, [data-loop-btn], #manualCancelBtn, #lineRateResetBtn { background: #E29578 !important; }
     .subtitle-text { color: #2B2D42 !important; background: #fffaf3 !important; border-color: #000 !important; }
     .subtitle-row .text-sky-200 { color: #2B2D42 !important; }
     .count-badge { background: #f5efe5 !important; color: #2B2D42 !important; }
     .subtitle-row { scroll-margin-block: 35vh; }
+    .subtitle-row { scroll-margin-top: var(--tower-offset, 120px); }
     .control-tower {
       position: sticky;
       top: 0;
@@ -52,6 +59,28 @@
       background: rgba(253, 251, 247, 0.82) !important;
       border-bottom: 2px solid #000 !important;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+    }
+    .control-panel {
+      max-height: 999px;
+      overflow: hidden;
+      transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.2s ease;
+    }
+    .control-tower.compact .control-panel {
+      max-height: 0;
+      opacity: 0;
+      margin: 0;
+      border: 0 !important;
+      box-shadow: none !important;
+    }
+    .tower-global-row {
+      max-height: 74px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      white-space: nowrap;
+      align-items: center;
+    }
+    @media (max-width: 640px) {
+      .control-panel { max-height: 80px; overflow: auto; }
     }
     .pill-btn {
       min-height: 44px;
@@ -77,6 +106,7 @@
     @media (orientation: landscape) and (max-height: 560px) {
       #controlTower { padding: 0.4rem !important; }
       #controlTower .aspect-video { max-height: 34vh; }
+      #controlTower .control-panel { max-height: 72px; }
       #controlTower .min-h-12, #controlTower .min-h-14 { min-height: 2.1rem !important; padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; }
       #controlTower .pill-btn { min-height: 34px; font-size: 0.8rem; padding: 0.35rem 0.6rem; }
       #controlTower .grid { gap: 0.35rem !important; }
@@ -103,8 +133,10 @@
     </section>
 
     <section id="controlTower" class="control-tower mt-4 sm:mt-6 rounded-2xl p-3 sm:p-4">
-      <div class="bg-card/70 border border-slate-700 rounded-2xl p-3 sm:p-4">
+      <div class="bg-card/70 border border-slate-700 rounded-2xl p-2 sm:p-3">
         <div class="aspect-video w-full rounded-xl overflow-hidden bg-black"><div id="player" class="w-full h-full"></div></div>
+      </div>
+      <div id="controlPanel" class="control-panel mt-2 bg-card/70 border border-slate-700 rounded-2xl p-2 sm:p-3">
         <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
           <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">影片：<span id="videoIdText">-</span></span>
           <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">字幕行數：<span id="countText">0</span></span>
@@ -127,9 +159,9 @@
           </label>
         </div>
       </div>
-      <div class="mt-3 border-t border-slate-600/50 pt-3">
+      <div class="control-panel mt-2 border-t border-slate-600/50 pt-2">
         <h2 class="text-base sm:text-lg font-semibold mb-3">全局顯示控制面板</h2>
-        <div class="flex flex-wrap gap-2">
+        <div class="tower-global-row flex gap-2">
           <button id="globalShowEnBtn" class="pill-btn">🇬🇧 英文</button>
           <button id="globalShowZhBtn" class="pill-btn">🇨🇳 中文</button>
           <button id="globalShowBothBtn" class="pill-btn">🌐 雙語</button>
@@ -192,6 +224,7 @@
       focusModeBtn: document.getElementById("focusModeBtn"),
       lineRateResetBtn: document.getElementById("lineRateResetBtn"),
       controlTower: document.getElementById("controlTower"),
+      controlPanel: document.getElementById("controlPanel"),
       transcriptSection: document.getElementById("transcriptSection"),
       manualDialog: document.getElementById("manualDialog"),
       manualDurationInput: document.getElementById("manualDurationInput"),
@@ -212,6 +245,8 @@
     let preferredSlowRate = 0.7;
     let lineRateOverrideFrom = -1;
     let lineRateOverrideActive = false;
+    let towerCollapsed = false;
+    let lastScrollY = 0;
 
     const FAIL_MSG = "自動抓取受限，請點擊下方按鈕手動貼入英/中雙語講稿以開始練習";
     const esc = (t) => String(t || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll("\"","&quot;").replaceAll("'","&#039;");
@@ -340,7 +375,7 @@
         player = new YT.Player("player", {
           videoId,
           playerVars: { rel: 0, playsinline: 1 },
-          events: { onStateChange: () => syncPlayPauseButtons() }
+          events: { onStateChange: handlePlayerStateChange }
         });
       } else player.loadVideoById(videoId);
     }
@@ -389,6 +424,12 @@
       ui.focusModeBtn.className = focusModeEnabled ? active : normal;
       ui.lineRateResetBtn.className = autoResetLineRate ? active : normal;
       ui.lineRateResetBtn.textContent = autoResetLineRate ? "⏩ 下一句回 1x：開" : "⏩ 下一句回 1x：關";
+    }
+    function setTowerCollapsed(collapsed) {
+      towerCollapsed = Boolean(collapsed);
+      if (towerCollapsed) ui.controlTower.classList.add("compact");
+      else ui.controlTower.classList.remove("compact");
+      syncTranscriptOffset();
     }
     function applyGlobalLang(mode) {
       globalLangMode = mode;
@@ -450,7 +491,8 @@
     }
     function syncTranscriptOffset() {
       const towerH = ui.controlTower ? ui.controlTower.offsetHeight : 0;
-      ui.transcriptSection.style.paddingTop = `${Math.max(16, Math.round(towerH * 0.18))}px`;
+      ui.transcriptSection.style.paddingTop = `${Math.max(10, Math.round(towerH * 0.12))}px`;
+      document.documentElement.style.setProperty("--tower-offset", `${Math.max(64, towerH + 10)}px`);
     }
     function setCurrent(i) {
       const changed = i !== currentLineIndex;
@@ -513,6 +555,12 @@
       else applyCurrentHighlight();
     }
     function isPlayerPlaying() { return Boolean(playerReady && player && player.getPlayerState && player.getPlayerState() === YT.PlayerState.PLAYING); }
+    function handlePlayerStateChange() {
+      syncPlayPauseButtons();
+      if (!player || !player.getPlayerState) return;
+      const state = player.getPlayerState();
+      if (state === YT.PlayerState.PAUSED || state === YT.PlayerState.ENDED) setTowerCollapsed(false);
+    }
     function syncPlayPauseButtons() {
       const playing = isPlayerPlaying();
       document.querySelectorAll("[data-playpause-btn]").forEach((btn) => {
@@ -688,6 +736,15 @@
     ui.lineRateResetBtn.addEventListener("click", () => setAutoResetLineRate(!autoResetLineRate));
     document.querySelectorAll("[data-rate-btn]").forEach((b) => b.addEventListener("click", () => setRate(Number(b.getAttribute("data-rate-btn")))));
     ui.urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") loadVideoAndTranscript(); });
+    window.addEventListener("scroll", () => {
+      const y = window.scrollY;
+      const delta = y - lastScrollY;
+      if (Math.abs(delta) > 10) {
+        if (delta > 0 && isPlayerPlaying()) setTowerCollapsed(true);
+        if (delta < 0) setTowerCollapsed(false);
+      }
+      lastScrollY = y;
+    }, { passive: true });
     window.addEventListener("resize", syncTranscriptOffset);
     if (window.visualViewport) window.visualViewport.addEventListener("resize", syncTranscriptOffset);
     syncTranscriptOffset();
