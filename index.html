@@ -1,12 +1,18 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="zh-Hant" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>YouTube Shadowing Player</title>
+  <title>YouTube 跟讀播放器</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = { theme: { extend: { colors: { bg: "#0b1020", card: "#111827", line: "#1f2937" } } } };
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { bg: "#0b1020", card: "#111827", line: "#1f2937" }
+        }
+      }
+    };
   </script>
   <style>
     .safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
@@ -19,72 +25,85 @@
 <body class="bg-bg text-slate-100 min-h-screen">
   <div class="max-w-5xl mx-auto px-4 py-5 sm:py-8 safe-bottom">
     <header class="mb-5 sm:mb-6">
-      <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">YouTube Shadowing Player</h1>
-      <p class="text-slate-300 mt-2 text-sm sm:text-base">Jump by line, loop, auto-pause, blur mode, speed, counters.</p>
+      <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">YouTube 跟讀播放器</h1>
+      <p class="text-slate-300 mt-2 text-sm sm:text-base">句子跳轉、單句循環、Auto-Pause、盲聽、速度切換、練習計數。</p>
     </header>
 
     <section class="bg-card/90 border border-slate-700 rounded-2xl p-3 sm:p-4 shadow-xl">
-      <label for="urlInput" class="block text-sm text-slate-300 mb-2">YouTube URL or video ID</label>
+      <label for="urlInput" class="block text-sm text-slate-300 mb-2">YouTube 網址或影片 ID</label>
       <div class="flex flex-col sm:flex-row gap-3">
-        <input id="urlInput" type="text" placeholder="https://www.youtube.com/watch?v=... or 11-char ID" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-4 py-4 text-base focus:outline-none focus:ring-2 focus:ring-cyan-400" />
-        <button id="loadBtn" class="min-h-14 sm:min-h-12 rounded-xl bg-cyan-400 text-slate-900 font-semibold px-5 py-3 text-base">Load video + transcript</button>
+        <input id="urlInput" type="text" placeholder="https://www.youtube.com/watch?v=... 或直接貼 11 碼 ID" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-4 py-4 text-base focus:outline-none focus:ring-2 focus:ring-cyan-400" />
+        <button id="loadBtn" class="min-h-14 sm:min-h-12 rounded-xl bg-cyan-400 text-slate-900 font-semibold px-5 py-3 text-base hover:bg-cyan-300">載入影片與字幕</button>
       </div>
       <div class="mt-3">
-        <button id="manualOpenBtn" class="w-full sm:w-auto min-h-12 rounded-xl border border-cyan-400 text-cyan-300 px-4 py-2">Hand paste transcript</button>
+        <button id="manualOpenBtn" class="w-full sm:w-auto min-h-12 rounded-xl border border-cyan-400 text-cyan-300 px-4 py-2 hover:bg-cyan-500/10">手動貼上字幕</button>
       </div>
-      <p id="status" class="mt-3 text-sm text-slate-300">Not loaded yet.</p>
+      <p id="status" class="mt-3 text-sm text-slate-300">尚未載入影片</p>
     </section>
 
     <section class="mt-4 sm:mt-6 bg-card/90 border border-slate-700 rounded-2xl p-3 sm:p-4 shadow-xl">
       <div class="aspect-video w-full rounded-xl overflow-hidden bg-black"><div id="player" class="w-full h-full"></div></div>
       <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
-        <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">Video: <span id="videoIdText">-</span></span>
-        <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">Lines: <span id="countText">0</span></span>
-        <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">Current: <span id="currentLineText">-</span></span>
-        <button id="stopLoopBtn" class="min-h-12 rounded-xl border border-rose-400 text-rose-300 px-4 py-2">Stop loop</button>
+        <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">影片：<span id="videoIdText">-</span></span>
+        <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">字幕行數：<span id="countText">0</span></span>
+        <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">目前句：<span id="currentLineText">-</span></span>
+        <button id="stopLoopBtn" class="min-h-12 rounded-xl border border-rose-400 text-rose-300 px-4 py-2">停止循環</button>
       </div>
+
       <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <button id="prevBtn" class="min-h-14 rounded-xl bg-slate-800 border border-slate-600 text-base font-semibold">Prev line</button>
-        <button id="replayBtn" class="min-h-14 rounded-xl bg-cyan-400 text-slate-900 text-base font-semibold">Replay line</button>
-        <button id="nextBtn" class="min-h-14 rounded-xl bg-slate-800 border border-slate-600 text-base font-semibold">Next line</button>
+        <button id="prevBtn" class="min-h-14 rounded-xl bg-slate-800 border border-slate-600 text-base font-semibold">上一句</button>
+        <button id="replayBtn" class="min-h-14 rounded-xl bg-cyan-400 text-slate-900 text-base font-semibold">重新播放本句</button>
+        <button id="nextBtn" class="min-h-14 rounded-xl bg-slate-800 border border-slate-600 text-base font-semibold">下一句</button>
       </div>
+
       <div class="mt-3 flex flex-wrap gap-2">
         <button data-rate-btn="0.75" class="rate-btn min-h-12 px-4 rounded-xl border border-slate-600 bg-slate-800">0.75x</button>
         <button data-rate-btn="1" class="rate-btn min-h-12 px-4 rounded-xl border border-cyan-300 bg-cyan-400 text-slate-900 font-semibold">1x</button>
         <button data-rate-btn="1.25" class="rate-btn min-h-12 px-4 rounded-xl border border-slate-600 bg-slate-800">1.25x</button>
       </div>
+
       <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <label class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 flex items-center justify-between"><span>Auto-pause</span><input id="autoPauseToggle" type="checkbox" class="h-5 w-5" /></label>
-        <label class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 flex items-center justify-between"><span>Blur subtitles</span><input id="blurToggle" type="checkbox" class="h-5 w-5" checked /></label>
+        <label class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 flex items-center justify-between">
+          <span>Auto-Pause（句尾留白）</span><input id="autoPauseToggle" type="checkbox" class="h-5 w-5" />
+        </label>
+        <label class="min-h-12 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 flex items-center justify-between">
+          <span>盲聽模式（字幕模糊）</span><input id="blurToggle" type="checkbox" class="h-5 w-5" checked />
+        </label>
       </div>
     </section>
 
     <section class="mt-4 sm:mt-6">
-      <h2 class="text-lg sm:text-xl font-semibold mb-3">All subtitle lines</h2>
+      <h2 class="text-lg sm:text-xl font-semibold mb-3">所有字幕行</h2>
       <div id="transcriptList" class="space-y-2 blind-enabled"></div>
     </section>
 
     <section class="mt-6 bg-card/90 border border-slate-700 rounded-2xl p-3 sm:p-4 shadow-xl">
-      <h2 class="text-lg sm:text-xl font-semibold mb-3">Classic shadowing playlist</h2>
+      <h2 class="text-lg sm:text-xl font-semibold mb-3">經典跟讀片單</h2>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <button data-video-card="L6gAnS66nQY" class="text-left rounded-xl border border-slate-600 bg-slate-800 p-4"><p class="font-semibold">Video 1</p><p class="text-slate-300 text-sm mt-1">L6gAnS66nQY</p><p class="text-slate-200 text-sm mt-2">Peppa Pig - beginner</p></button>
-        <button data-video-card="X6_Y7S7zFpY" class="text-left rounded-xl border border-slate-600 bg-slate-800 p-4"><p class="font-semibold">Video 2</p><p class="text-slate-300 text-sm mt-1">X6_Y7S7zFpY</p><p class="text-slate-200 text-sm mt-2">Steve Jobs - advanced</p></button>
-        <button data-video-card="9DmVsZHpWy0" class="text-left rounded-xl border border-slate-600 bg-slate-800 p-4"><p class="font-semibold">Video 3</p><p class="text-slate-300 text-sm mt-1">9DmVsZHpWy0</p><p class="text-slate-200 text-sm mt-2">100LS tutorial</p></button>
+        <button data-video-card="M7lc1UVf-VE" class="text-left rounded-xl border border-slate-600 bg-slate-800 p-4 hover:border-cyan-300">
+          <p class="font-semibold">影片 1</p><p class="text-slate-300 text-sm mt-1">M7lc1UVf-VE</p><p class="text-slate-200 text-sm mt-2">YouTube 官方示例（穩定可播）</p>
+        </button>
+        <button data-video-card="dQw4w9WgXcQ" class="text-left rounded-xl border border-slate-600 bg-slate-800 p-4 hover:border-cyan-300">
+          <p class="font-semibold">影片 2</p><p class="text-slate-300 text-sm mt-1">dQw4w9WgXcQ</p><p class="text-slate-200 text-sm mt-2">經典英語歌（穩定可播）</p>
+        </button>
+        <button data-video-card="9DmVsZHpWy0" class="text-left rounded-xl border border-slate-600 bg-slate-800 p-4 hover:border-cyan-300">
+          <p class="font-semibold">影片 3</p><p class="text-slate-300 text-sm mt-1">9DmVsZHpWy0</p><p class="text-slate-200 text-sm mt-2">100LS 教學影片</p>
+        </button>
       </div>
     </section>
   </div>
 
   <dialog id="manualDialog" class="w-[96%] max-w-3xl rounded-2xl bg-slate-900 text-slate-100 border border-slate-700 p-0">
     <div class="p-4 sm:p-5">
-      <h3 class="text-lg font-semibold">Paste transcript manually</h3>
-      <p class="text-sm text-slate-300 mt-1">Format A: 00:12 Hello world. Format B: one sentence per line.</p>
-      <label for="manualDurationInput" class="block text-sm text-slate-300 mt-4 mb-2">Seconds per line for plain-text mode</label>
+      <h3 class="text-lg font-semibold">手動貼上字幕</h3>
+      <p class="text-sm text-slate-300 mt-1">支援三種：A. `00:12 Hello`、B. 時間與文字分行、C. 純文字每行一句。</p>
+      <label for="manualDurationInput" class="block text-sm text-slate-300 mt-4 mb-2">純文字模式每句秒數</label>
       <input id="manualDurationInput" type="number" step="0.1" min="0.5" value="2.5" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3 py-3 text-base" />
-      <label for="manualTextInput" class="block text-sm text-slate-300 mt-4 mb-2">Transcript content</label>
-      <textarea id="manualTextInput" rows="12" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3 py-3 text-sm" placeholder="00:00 Hello&#10;00:02 How are you?"></textarea>
+      <label for="manualTextInput" class="block text-sm text-slate-300 mt-4 mb-2">字幕內容</label>
+      <textarea id="manualTextInput" rows="12" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3 py-3 text-sm" placeholder="0:03&#10;[This talk...]&#10;0:08&#10;Do you ever wonder..."></textarea>
       <div class="mt-4 flex flex-col sm:flex-row gap-2 sm:justify-end">
-        <button id="manualCancelBtn" class="min-h-12 rounded-xl border border-slate-500 px-4 py-2">Cancel</button>
-        <button id="manualApplyBtn" class="min-h-12 rounded-xl bg-cyan-400 text-slate-900 px-5 py-2 font-semibold">Apply transcript</button>
+        <button id="manualCancelBtn" class="min-h-12 rounded-xl border border-slate-500 px-4 py-2">取消</button>
+        <button id="manualApplyBtn" class="min-h-12 rounded-xl bg-cyan-400 text-slate-900 px-5 py-2 font-semibold">套用手動字幕</button>
       </div>
     </div>
   </dialog>
@@ -92,67 +111,94 @@
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
     const ui = {
-      urlInput: document.getElementById("urlInput"),
-      loadBtn: document.getElementById("loadBtn"),
-      manualOpenBtn: document.getElementById("manualOpenBtn"),
-      status: document.getElementById("status"),
-      transcriptList: document.getElementById("transcriptList"),
-      videoIdText: document.getElementById("videoIdText"),
-      countText: document.getElementById("countText"),
-      currentLineText: document.getElementById("currentLineText"),
-      stopLoopBtn: document.getElementById("stopLoopBtn"),
-      prevBtn: document.getElementById("prevBtn"),
-      replayBtn: document.getElementById("replayBtn"),
-      nextBtn: document.getElementById("nextBtn"),
-      autoPauseToggle: document.getElementById("autoPauseToggle"),
-      blurToggle: document.getElementById("blurToggle"),
-      manualDialog: document.getElementById("manualDialog"),
-      manualDurationInput: document.getElementById("manualDurationInput"),
-      manualTextInput: document.getElementById("manualTextInput"),
-      manualCancelBtn: document.getElementById("manualCancelBtn"),
+      urlInput: document.getElementById("urlInput"), loadBtn: document.getElementById("loadBtn"),
+      manualOpenBtn: document.getElementById("manualOpenBtn"), status: document.getElementById("status"),
+      transcriptList: document.getElementById("transcriptList"), videoIdText: document.getElementById("videoIdText"),
+      countText: document.getElementById("countText"), currentLineText: document.getElementById("currentLineText"),
+      stopLoopBtn: document.getElementById("stopLoopBtn"), prevBtn: document.getElementById("prevBtn"),
+      replayBtn: document.getElementById("replayBtn"), nextBtn: document.getElementById("nextBtn"),
+      autoPauseToggle: document.getElementById("autoPauseToggle"), blurToggle: document.getElementById("blurToggle"),
+      manualDialog: document.getElementById("manualDialog"), manualDurationInput: document.getElementById("manualDurationInput"),
+      manualTextInput: document.getElementById("manualTextInput"), manualCancelBtn: document.getElementById("manualCancelBtn"),
       manualApplyBtn: document.getElementById("manualApplyBtn")
     };
 
     let player = null, playerReady = false, transcript = [], currentLineIndex = -1;
-    let activeLoop = null, loopTimer = null, tickTimer = null, autoPauseTimer = null;
-    let autoPauseEnabled = false, autoPauseLockIndex = null, completeLockIndex = null;
+    let activeLoop = null, loopTimer = null, tickTimer = null;
+    let autoPauseTimer = null, autoPauseEnabled = false, autoPauseLockIndex = null, completeLockIndex = null;
     let currentVideoId = "", countsByLine = {}, currentPlaybackRate = 1;
+    const FAIL_MSG = "自動抓取失敗，請點擊下方按鈕手動貼上字幕內容";
 
-    const FAIL_MSG = "\u81ea\u52d5\u6293\u53d6\u5931\u6557\uff0c\u8acb\u9ede\u64ca\u4e0b\u65b9\u6309\u9215\u624b\u52d5\u8cbc\u4e0a\u5b57\u5e55\u5167\u5bb9";
     const setStatus = (msg, err = false) => {
       ui.status.textContent = msg;
       ui.status.className = "mt-3 text-sm " + (err ? "text-rose-300" : "text-slate-300");
     };
-    const esc = (t) => String(t).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll("\"","&quot;").replaceAll("'","&#039;");
+    const esc = (t) => String(t).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;").replaceAll("'", "&#039;");
     const lineKey = (line) => `${Math.round(line.start * 1000)}|${line.text}`;
     const storageKey = () => `shadowing-counts:${currentVideoId || "unknown"}`;
 
     function parseYouTubeId(input) {
       const raw = String(input || "").trim();
       if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return raw;
-      try { const u = new URL(raw); if (u.hostname.includes("youtu.be")) return u.pathname.replace("/", ""); return u.searchParams.get("v") || ""; } catch { return ""; }
+      try {
+        const u = new URL(raw);
+        if (u.hostname.includes("youtu.be")) return u.pathname.replace("/", "");
+        if (u.pathname.startsWith("/shorts/") || u.pathname.startsWith("/embed/")) return u.pathname.split("/")[2] || "";
+        return u.searchParams.get("v") || "";
+      } catch { return ""; }
     }
     function fmt(sec) { const s = Math.max(0, Math.floor(sec)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }
-    function toSec(raw) { const p = String(raw).trim().split(":").map(Number); if (p.some((n) => !Number.isFinite(n))) return NaN; return p.length === 2 ? p[0]*60+p[1] : p.length === 3 ? p[0]*3600+p[1]*60+p[2] : NaN; }
-
-    function parseManualTranscript(rawText, secsPerLine) {
+    function toSec(raw) {
+      const p = String(raw).trim().split(":").map(Number);
+      if (!p.length || p.some((n) => !Number.isFinite(n))) return NaN;
+      if (p.length === 2) return p[0] * 60 + p[1];
+      if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2];
+      return NaN;
+    }
+    function isTimeOnly(line) { return /^\d{1,2}:\d{2}(?::\d{2})?$/.test(line.trim()); }
+    function parseManualTranscript(rawText, secPerLine) {
       const lines = String(rawText || "").split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
       if (!lines.length) return [];
-      const timed = /^(\d{1,2}:\d{2}(?::\d{2})?)(?:[.,]\d+)?\s+(.+)$/;
-      if (lines.some((x) => timed.test(x))) {
-        const rows = lines.map((x) => { const m = x.match(timed); if (!m) return null; const s = toSec(m[1]); return Number.isFinite(s) ? { start: s, text: m[2].trim(), duration: 0 } : null; }).filter(Boolean).sort((a,b)=>a.start-b.start);
-        for (let i=0;i<rows.length;i+=1) rows[i].duration = rows[i+1] ? Math.max(0.8, rows[i+1].start - rows[i].start) : Math.max(0.8, Number(secsPerLine || 2.5));
-        return rows.map((r,i)=>({ id:i, text:r.text, start:r.start, duration:r.duration }));
+      const timedInline = /^(\d{1,2}:\d{2}(?::\d{2})?)(?:[.,]\d+)?\s+(.+)$/;
+
+      if (lines.some((line) => timedInline.test(line))) {
+        const rows = lines.map((line) => {
+          const m = line.match(timedInline);
+          if (!m) return null;
+          const s = toSec(m[1]);
+          return Number.isFinite(s) ? { start: s, text: m[2].trim(), duration: 0 } : null;
+        }).filter(Boolean).sort((a, b) => a.start - b.start);
+        for (let i = 0; i < rows.length; i += 1) rows[i].duration = rows[i + 1] ? Math.max(0.8, rows[i + 1].start - rows[i].start) : Math.max(0.8, Number(secPerLine || 2.5));
+        return rows.map((r, i) => ({ id: i, text: r.text, start: r.start, duration: r.duration }));
       }
-      const d = Math.max(0.5, Number(secsPerLine || 2.5));
+
+      if (lines.some((line) => isTimeOnly(line))) {
+        const rows = [];
+        for (let i = 0; i < lines.length; i += 1) {
+          if (!isTimeOnly(lines[i])) continue;
+          const start = toSec(lines[i]);
+          let j = i + 1;
+          while (j < lines.length && isTimeOnly(lines[j])) j += 1;
+          if (!Number.isFinite(start) || j >= lines.length) continue;
+          rows.push({ start, text: lines[j], duration: 0 });
+          i = j;
+        }
+        rows.sort((a, b) => a.start - b.start);
+        for (let i = 0; i < rows.length; i += 1) rows[i].duration = rows[i + 1] ? Math.max(0.8, rows[i + 1].start - rows[i].start) : Math.max(0.8, Number(secPerLine || 2.5));
+        return rows.map((r, i) => ({ id: i, text: r.text, start: r.start, duration: r.duration }));
+      }
+
+      const d = Math.max(0.5, Number(secPerLine || 2.5));
       return lines.map((text, i) => ({ id: i, text, start: i * d, duration: d }));
     }
 
     function normalizeTranscript(data) {
       const root = Array.isArray(data) ? data : Array.isArray(data?.transcript) ? data.transcript : Array.isArray(data?.captions) ? data.captions : [];
-      const lines = root.map((x,i)=>({ id:i, text:String(x.text ?? x.caption ?? "").trim(), start:Number(x.start ?? x.startTime), duration:Number(x.duration ?? 0) }))
-        .filter((x)=>x.text && Number.isFinite(x.start)).sort((a,b)=>a.start-b.start);
-      for (let i=0;i<lines.length;i+=1) if (!lines[i].duration || lines[i].duration <= 0) lines[i].duration = lines[i+1] ? Math.max(0.8, lines[i+1].start-lines[i].start) : 2.5;
+      const lines = root.map((x, i) => ({
+        id: i, text: String(x.text ?? x.caption ?? "").trim(),
+        start: Number(x.start ?? x.startTime), duration: Number(x.duration ?? 0)
+      })).filter((x) => x.text && Number.isFinite(x.start)).sort((a, b) => a.start - b.start);
+      for (let i = 0; i < lines.length; i += 1) if (!lines[i].duration || lines[i].duration <= 0) lines[i].duration = lines[i + 1] ? Math.max(0.8, lines[i + 1].start - lines[i].start) : 2.5;
       return lines;
     }
 
@@ -163,69 +209,130 @@
         `https://youtubetranscript.com/?server_vid2=${encodeURIComponent(videoId)}`
       ];
       for (const p of providers) { try { const parsed = normalizeTranscript(await fetchJson(p)); if (parsed.length) return parsed; } catch {} }
-      throw new Error("all providers failed");
+      throw new Error("providers failed");
     }
-    function ensurePlayer(videoId) { if (!player) player = new YT.Player("player", { videoId, playerVars: { rel:0, playsinline:1 } }); else player.loadVideoById(videoId); }
+    function ensurePlayer(videoId) { if (!player) player = new YT.Player("player", { videoId, playerVars: { rel: 0, playsinline: 1 } }); else player.loadVideoById(videoId); }
     function loadCounts() { try { countsByLine = JSON.parse(localStorage.getItem(storageKey()) || "{}") || {}; } catch { countsByLine = {}; } }
     function saveCounts() { try { localStorage.setItem(storageKey(), JSON.stringify(countsByLine)); } catch {} }
-    function inc(i) { const line = transcript[i]; if (!line) return; const k = lineKey(line); countsByLine[k] = Number(countsByLine[k] || 0) + 1; saveCounts(); const n = document.querySelector(`[data-count-label="${i}"]`); if (n) n.textContent = `${countsByLine[k]}x`; }
+    function inc(i) { const line = transcript[i]; if (!line) return; const k = lineKey(line); countsByLine[k] = Number(countsByLine[k] || 0) + 1; saveCounts(); const n = document.querySelector(`[data-count-label="${i}"]`); if (n) n.textContent = `${countsByLine[k]} 次`; }
     function findIdx(t) { for (let i = transcript.length - 1; i >= 0; i -= 1) if (t >= transcript[i].start) return i; return -1; }
-    function setCurrent(i) { currentLineIndex = i; ui.currentLineText.textContent = i >= 0 ? String(i + 1) : "-"; document.querySelectorAll("[data-line]").forEach((r)=>r.classList.remove("ring-2","ring-cyan-400")); const row=document.querySelector(`[data-line="${i}"]`); if (row) row.classList.add("ring-2","ring-cyan-400"); }
-    function clearLoop() { activeLoop = null; if (loopTimer) clearInterval(loopTimer); loopTimer = null; document.querySelectorAll("[data-loop-btn]").forEach((b)=>b.classList.remove("bg-emerald-400","text-slate-900")); }
-    function clearAutoPause() { if (autoPauseTimer) clearTimeout(autoPauseTimer); autoPauseTimer = null; autoPauseLockIndex = null; }
-    function jumpTo(i, opt = {}) { const line = transcript[i]; if (!line || !playerReady || !player) return; if (opt.increment) inc(i); if (opt.clearLoopFirst !== false) clearLoop(); clearAutoPause(); completeLockIndex = null; setCurrent(i); player.seekTo(line.start, true); player.playVideo(); }
-    function loopLine(i) {
-      const line = transcript[i]; if (!line || !playerReady || !player) return;
-      activeLoop = { index: i, start: line.start, end: line.start + line.duration }; jumpTo(i, { increment: true, clearLoopFirst: false });
-      let counted = false; clearInterval(loopTimer);
-      loopTimer = setInterval(() => { const t = player.getCurrentTime(); if (t < activeLoop.start + 0.12) counted = false; if (t >= activeLoop.end - 0.05) { if (!counted) { inc(i); counted = true; } player.seekTo(activeLoop.start, true); player.playVideo(); } }, 140);
+    function setCurrent(i) {
+      currentLineIndex = i;
+      ui.currentLineText.textContent = i >= 0 ? String(i + 1) : "-";
+      document.querySelectorAll("[data-line]").forEach((r) => r.classList.remove("ring-2", "ring-cyan-400"));
+      const row = document.querySelector(`[data-line="${i}"]`);
+      if (row) row.classList.add("ring-2", "ring-cyan-400");
     }
-    function setRate(rate) { currentPlaybackRate = rate; if (playerReady && player) player.setPlaybackRate(rate); document.querySelectorAll("[data-rate-btn]").forEach((b)=>{ const on=Number(b.getAttribute("data-rate-btn"))===rate; b.className = on ? "rate-btn min-h-12 px-4 rounded-xl border border-cyan-300 bg-cyan-400 text-slate-900 font-semibold" : "rate-btn min-h-12 px-4 rounded-xl border border-slate-600 bg-slate-800"; }); }
+    function clearLoop() {
+      activeLoop = null;
+      if (loopTimer) clearInterval(loopTimer);
+      loopTimer = null;
+      document.querySelectorAll("[data-loop-btn]").forEach((b) => b.classList.remove("bg-emerald-400", "text-slate-900"));
+    }
+    function clearAutoPause() { if (autoPauseTimer) clearTimeout(autoPauseTimer); autoPauseTimer = null; autoPauseLockIndex = null; }
+    function jumpTo(i, opt = {}) {
+      const line = transcript[i];
+      if (!line || !playerReady || !player) return;
+      if (opt.increment) inc(i);
+      if (opt.clearLoopFirst !== false) clearLoop();
+      clearAutoPause();
+      completeLockIndex = null;
+      setCurrent(i);
+      player.seekTo(line.start, true);
+      player.playVideo();
+    }
+    function loopLine(i) {
+      const line = transcript[i];
+      if (!line || !playerReady || !player) return;
+      activeLoop = { index: i, start: line.start, end: line.start + line.duration };
+      jumpTo(i, { increment: true, clearLoopFirst: false });
+      let counted = false;
+      clearInterval(loopTimer);
+      loopTimer = setInterval(() => {
+        const t = player.getCurrentTime();
+        if (t < activeLoop.start + 0.12) counted = false;
+        if (t >= activeLoop.end - 0.05) {
+          if (!counted) { inc(i); counted = true; }
+          player.seekTo(activeLoop.start, true);
+          player.playVideo();
+        }
+      }, 140);
+    }
+    function setRate(rate) {
+      currentPlaybackRate = rate;
+      if (playerReady && player) player.setPlaybackRate(rate);
+      document.querySelectorAll("[data-rate-btn]").forEach((b) => {
+        const on = Number(b.getAttribute("data-rate-btn")) === rate;
+        b.className = on
+          ? "rate-btn min-h-12 px-4 rounded-xl border border-cyan-300 bg-cyan-400 text-slate-900 font-semibold"
+          : "rate-btn min-h-12 px-4 rounded-xl border border-slate-600 bg-slate-800";
+      });
+    }
     function setBlind(on) { if (on) ui.transcriptList.classList.add("blind-enabled"); else ui.transcriptList.classList.remove("blind-enabled"); }
     function render() {
-      ui.transcriptList.innerHTML = ""; ui.countText.textContent = String(transcript.length);
-      if (!transcript.length) { ui.transcriptList.innerHTML = `<div class="rounded-xl border border-slate-700 bg-card p-4 text-slate-300">No transcript lines.</div>`; return; }
+      ui.transcriptList.innerHTML = "";
+      ui.countText.textContent = String(transcript.length);
+      if (!transcript.length) { ui.transcriptList.innerHTML = `<div class="rounded-xl border border-slate-700 bg-card p-4 text-slate-300">沒有可顯示的字幕。</div>`; return; }
       transcript.forEach((line, i) => {
         const count = Number(countsByLine[lineKey(line)] || 0);
         const row = document.createElement("div");
         row.className = "subtitle-row rounded-xl border border-slate-700 bg-line/70 p-3 sm:p-4";
         row.setAttribute("data-line", String(i));
-        row.innerHTML = `<div class="flex flex-col gap-3"><div class="flex flex-wrap items-center gap-2"><button data-jump-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl bg-cyan-400 text-slate-900 px-4 py-2 font-semibold text-base">${fmt(line.start)} jump</button><button data-loop-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl border border-slate-500 px-4 py-2 text-base">?? loop</button><span data-count-label="${i}" class="px-3 py-2 rounded-xl border border-slate-500 text-sm text-slate-200">${count}x</span></div><button data-text-btn="${i}" class="subtitle-text text-left w-full rounded-xl border border-slate-600 bg-slate-900/70 px-4 py-3 text-base leading-relaxed text-slate-100">${esc(line.text)}</button></div>`;
+        row.innerHTML = `<div class="flex flex-col gap-3"><div class="flex flex-wrap items-center gap-2"><button data-jump-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl bg-cyan-400 text-slate-900 px-4 py-2 font-semibold text-base">${fmt(line.start)} 跳到這句</button><button data-loop-btn="${i}" class="w-full sm:w-auto min-h-12 rounded-xl border border-slate-500 px-4 py-2 text-base">🔁 循環</button><span data-count-label="${i}" class="px-3 py-2 rounded-xl border border-slate-500 text-sm text-slate-200">${count} 次</span></div><button data-text-btn="${i}" class="subtitle-text text-left w-full rounded-xl border border-slate-600 bg-slate-900/70 px-4 py-3 text-base leading-relaxed text-slate-100">${esc(line.text)}</button></div>`;
         row.addEventListener("pointerdown", () => row.classList.add("force-reveal"));
-        ["pointerup","pointercancel","pointerleave"].forEach((e)=>row.addEventListener(e,()=>row.classList.remove("force-reveal")));
+        ["pointerup", "pointercancel", "pointerleave"].forEach((e) => row.addEventListener(e, () => row.classList.remove("force-reveal")));
         ui.transcriptList.appendChild(row);
       });
-      document.querySelectorAll("[data-jump-btn]").forEach((b)=>b.addEventListener("click",()=>jumpTo(Number(b.getAttribute("data-jump-btn")), { increment: true })));
-      document.querySelectorAll("[data-text-btn]").forEach((b)=>b.addEventListener("click",()=>jumpTo(Number(b.getAttribute("data-text-btn")), { increment: true })));
-      document.querySelectorAll("[data-loop-btn]").forEach((b)=>b.addEventListener("click",()=>{ const i=Number(b.getAttribute("data-loop-btn")); if (activeLoop && activeLoop.index===i) return clearLoop(); clearLoop(); clearAutoPause(); b.classList.add("bg-emerald-400","text-slate-900"); loopLine(i); }));
+      document.querySelectorAll("[data-jump-btn]").forEach((b) => b.addEventListener("click", () => jumpTo(Number(b.getAttribute("data-jump-btn")), { increment: true })));
+      document.querySelectorAll("[data-text-btn]").forEach((b) => b.addEventListener("click", () => jumpTo(Number(b.getAttribute("data-text-btn")), { increment: true })));
+      document.querySelectorAll("[data-loop-btn]").forEach((b) => b.addEventListener("click", () => {
+        const i = Number(b.getAttribute("data-loop-btn"));
+        if (activeLoop && activeLoop.index === i) return clearLoop();
+        clearLoop(); clearAutoPause(); b.classList.add("bg-emerald-400", "text-slate-900"); loopLine(i);
+      }));
     }
     function tick() {
       if (!playerReady || !player || !transcript.length) return;
       const t = player.getCurrentTime(), i = findIdx(t);
       if (i >= 0 && i !== currentLineIndex) setCurrent(i);
-      if (!activeLoop && i >= 0) { const end = transcript[i].start + transcript[i].duration; if (t >= end - 0.05 && completeLockIndex !== i) { completeLockIndex = i; inc(i); } if (t < end - 0.2) completeLockIndex = null; }
+      if (!activeLoop && i >= 0) {
+        const end = transcript[i].start + transcript[i].duration;
+        if (t >= end - 0.05 && completeLockIndex !== i) { completeLockIndex = i; inc(i); }
+        if (t < end - 0.2) completeLockIndex = null;
+      }
       if (!autoPauseEnabled || activeLoop || i < 0) return;
       if (player.getPlayerState && player.getPlayerState() !== YT.PlayerState.PLAYING) return;
       const end = transcript[i].start + transcript[i].duration;
       if (t >= end - 0.05 && autoPauseLockIndex !== i) {
-        autoPauseLockIndex = i; player.pauseVideo();
+        autoPauseLockIndex = i;
+        player.pauseVideo();
         const waitMs = Math.max(400, transcript[i].duration * 1200);
         clearTimeout(autoPauseTimer);
-        autoPauseTimer = setTimeout(() => { if (!autoPauseEnabled) return; const n = i + 1; if (n >= transcript.length) return setStatus("Auto-pause reached end."); jumpTo(n, { increment: false }); }, waitMs);
+        autoPauseTimer = setTimeout(() => {
+          if (!autoPauseEnabled) return;
+          const n = i + 1;
+          if (n >= transcript.length) return setStatus("Auto-Pause 已播到最後一句。");
+          jumpTo(n, { increment: false });
+        }, waitMs);
       }
     }
     function applyManual() {
       const parsed = parseManualTranscript(ui.manualTextInput.value, Number(ui.manualDurationInput.value || 2.5));
-      if (!parsed.length) return setStatus("Cannot parse manual transcript.", true);
-      transcript = parsed; clearLoop(); clearAutoPause(); completeLockIndex = null; currentLineIndex = -1; loadCounts(); render(); setRate(currentPlaybackRate); setStatus("Manual transcript applied.");
+      if (!parsed.length) return setStatus("手動字幕格式無法解析，請檢查內容。", true);
+      transcript = parsed;
+      clearLoop(); clearAutoPause(); completeLockIndex = null; currentLineIndex = -1;
+      loadCounts(); render(); setRate(currentPlaybackRate); setStatus("已套用手動字幕。");
     }
     async function loadVideoAndTranscript() {
-      const raw = ui.urlInput.value.trim(); if (!raw) return setStatus("Please paste URL or ID.", true);
-      const videoId = parseYouTubeId(raw); if (!videoId) return setStatus("Cannot parse video ID.", true);
+      const raw = ui.urlInput.value.trim();
+      if (!raw) return setStatus("請先貼上 YouTube 網址或影片 ID", true);
+      const videoId = parseYouTubeId(raw);
+      if (!videoId) return setStatus("網址格式無法辨識 YouTube 影片 ID", true);
       const videoUrl = raw.startsWith("http") ? raw : `https://www.youtube.com/watch?v=${videoId}`;
-      currentVideoId = videoId; ui.videoIdText.textContent = videoId; ensurePlayer(videoId);
-      clearLoop(); clearAutoPause(); completeLockIndex = null; currentLineIndex = -1; setStatus("Loading transcript...");
-      try { transcript = await fetchTranscript(videoUrl, videoId); loadCounts(); render(); setRate(currentPlaybackRate); setStatus("Transcript loaded."); }
+      currentVideoId = videoId; ui.videoIdText.textContent = videoId;
+      ensurePlayer(videoId); clearLoop(); clearAutoPause(); completeLockIndex = null; currentLineIndex = -1;
+      setStatus("正在載入字幕...");
+      try { transcript = await fetchTranscript(videoUrl, videoId); loadCounts(); render(); setRate(currentPlaybackRate); setStatus("字幕載入成功。"); }
       catch { transcript = []; render(); setStatus(FAIL_MSG, true); }
     }
 
@@ -238,10 +345,10 @@
     ui.prevBtn.addEventListener("click", () => { if (transcript.length) jumpTo(Math.max(0, (currentLineIndex >= 0 ? currentLineIndex : 0) - 1), { increment: true }); });
     ui.replayBtn.addEventListener("click", () => { if (transcript.length) jumpTo(currentLineIndex >= 0 ? currentLineIndex : 0, { increment: true }); });
     ui.nextBtn.addEventListener("click", () => { if (transcript.length) jumpTo(Math.min(transcript.length - 1, (currentLineIndex >= 0 ? currentLineIndex : 0) + 1), { increment: true }); });
-    ui.autoPauseToggle.addEventListener("change", (e) => { autoPauseEnabled = Boolean(e.target.checked); clearAutoPause(); setStatus(autoPauseEnabled ? "Auto-pause ON" : "Auto-pause OFF"); });
+    ui.autoPauseToggle.addEventListener("change", (e) => { autoPauseEnabled = Boolean(e.target.checked); clearAutoPause(); setStatus(autoPauseEnabled ? "Auto-Pause 已開啟" : "Auto-Pause 已關閉"); });
     ui.blurToggle.addEventListener("change", (e) => setBlind(Boolean(e.target.checked)));
     document.querySelectorAll("[data-rate-btn]").forEach((b) => b.addEventListener("click", () => setRate(Number(b.getAttribute("data-rate-btn")))));
-    document.querySelectorAll("[data-video-card]").forEach((c) => c.addEventListener("click", () => { const id = c.getAttribute("data-video-card"); ui.urlInput.value = id; setStatus(`Selected: ${id}`); }));
+    document.querySelectorAll("[data-video-card]").forEach((c) => c.addEventListener("click", () => { const id = c.getAttribute("data-video-card"); ui.urlInput.value = id; setStatus(`已選擇片單影片：${id}`); }));
     ui.urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") loadVideoAndTranscript(); });
     setBlind(true);
   </script>
