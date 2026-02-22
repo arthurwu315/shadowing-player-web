@@ -13,8 +13,8 @@
   </script>
   <style>
     body {
-      background: #FDFBF7 !important;
-      color: #2B2D42 !important;
+      background: #FFFDF0 !important;
+      color: #433D3C !important;
       font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans", "Noto Sans TC", "Noto Sans JP", "Noto Sans KR", sans-serif;
     }
     #app-container { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
@@ -68,12 +68,12 @@
       font-weight: 700;
       color: #2b2d42;
     }
-    section, dialog, .subtitle-row, button, .pill-btn, input, textarea, label {
-      border-radius: 0 !important;
-      border: 2px solid #000 !important;
-      box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 1) !important;
+    section, dialog, .subtitle-row, input, textarea, label {
+      border-radius: 20px !important;
+      border: 2px solid #433D3C !important;
+      box-shadow: 4px 4px 0 0 rgba(67, 61, 60, 0.2) !important;
     }
-    section, dialog, .subtitle-row, label { background: #ffffff !important; }
+    section, dialog, .subtitle-row, label { background: #fffdf6 !important; }
     input, textarea { background: #fffdf9 !important; color: #2B2D42 !important; }
     button, .pill-btn, .subtitle-text, label, p, .text-sm, .text-base {
       font-family: system-ui, -apple-system, "Segoe UI", sans-serif !important;
@@ -82,8 +82,11 @@
     }
     button, .pill-btn {
       transition: transform 120ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
-      background: #A3B18A !important;
-      color: #1f2937 !important;
+      background: #B7C4CF !important;
+      color: #433D3C !important;
+      border: 2px solid #433D3C !important;
+      border-radius: 9999px !important;
+      box-shadow: 4px 4px 0 0 rgba(67, 61, 60, 0.2) !important;
       font-weight: 700;
       padding-left: 0.9rem !important;
       padding-right: 0.9rem !important;
@@ -91,13 +94,13 @@
     button:hover, .pill-btn:hover { filter: brightness(0.92); opacity: 0.8; transform: translateY(-1px); }
     button:active, .pill-btn:active {
       transform: translate(1px, 1px) scale(0.95);
-      box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 1) !important;
+      box-shadow: 2px 2px 0 0 rgba(67, 61, 60, 0.2) !important;
     }
-    #loadBtn, #prevBtn, #replayBtn, #nextBtn, [data-rate-btn], [data-line-rate], [data-playpause-btn], [data-jump-btn] { background: #A3B18A !important; }
-    #globalShowEnBtn, #globalShowZhBtn, #globalShowBothBtn, [data-toggle-en], [data-toggle-zh] { background: #83C5BE !important; }
-    #stopLoopBtn, [data-loop-btn], #manualCancelBtn, #lineRateResetBtn { background: #E29578 !important; }
-    .subtitle-text { color: #2B2D42 !important; background: #fffaf3 !important; border-color: #000 !important; }
-    .subtitle-row .text-sky-200 { color: #2B2D42 !important; }
+    #loadBtn, #prevBtn, #replayBtn, #nextBtn, [data-rate-btn], [data-line-rate], [data-playpause-btn], [data-jump-btn] { background: #B7C4CF !important; }
+    #globalShowEnBtn, #globalShowZhBtn, #globalShowBothBtn, [data-toggle-en], [data-toggle-zh] { background: #EEE3CB !important; }
+    #stopLoopBtn, [data-loop-btn], #manualCancelBtn, #lineRateResetBtn { background: #D7C0AE !important; }
+    .subtitle-text { color: #433D3C !important; background: #fffaf3 !important; border-color: #433D3C !important; }
+    .subtitle-row .text-sky-200 { color: #433D3C !important; }
     .count-badge { background: #f5efe5 !important; color: #2B2D42 !important; }
     .subtitle-row { scroll-margin-block: 35vh; }
     .control-tower {
@@ -120,26 +123,26 @@
       flex-wrap: wrap;
     }
     .pixel-group {
-      border: 2px solid #000;
+      border: 2px solid #433D3C;
       background: #ffffff;
-      box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 1);
+      box-shadow: 4px 4px 0 0 rgba(67, 61, 60, 0.2);
       padding: 0.5rem;
     }
     .pixel-group-accent {
-      border: 2px solid #000;
+      border: 2px solid #433D3C;
       background: #f0f5f4;
-      box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 1);
+      box-shadow: 4px 4px 0 0 rgba(67, 61, 60, 0.2);
       padding: 0.5rem;
     }
     .recent-chip {
-      border: 2px solid #000;
+      border: 2px solid #433D3C;
       background: #ffffff;
       padding: 0.2rem 0.35rem;
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-      box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 1);
-      border-radius: 6px !important;
+      box-shadow: 4px 4px 0 0 rgba(67, 61, 60, 0.2);
+      border-radius: 20px !important;
     }
     .history-card-title {
       max-width: 128px;
@@ -253,22 +256,57 @@
       max-height: 56dvh;
       overflow: auto;
       background: #fffdf9;
-      border-top: 2px solid #000;
-      box-shadow: 0 -6px 0 0 rgba(0, 0, 0, 1);
+      border-top: 2px solid #433D3C;
+      box-shadow: 0 -6px 0 0 rgba(67, 61, 60, 0.2);
       padding: 0.7rem;
+    }
+    body.theme-hardcore section, body.theme-hardcore dialog, body.theme-hardcore .subtitle-row, body.theme-hardcore input, body.theme-hardcore textarea, body.theme-hardcore label {
+      border-radius: 0 !important;
+      border-color: #000 !important;
+      box-shadow: 4px 4px 0 0 rgba(0, 0, 0, 1) !important;
+      background: #fff !important;
+    }
+    body.theme-hardcore button, body.theme-hardcore .pill-btn {
+      border-radius: 0 !important;
+      border-color: #000 !important;
+      box-shadow: 4px 4px 0 0 rgba(0, 0, 0, 1) !important;
+    }
+    body.theme-business {
+      background: #f3f7ff !important;
+      color: #1f2a44 !important;
+    }
+    body.theme-business section, body.theme-business dialog, body.theme-business .subtitle-row, body.theme-business input, body.theme-business textarea, body.theme-business label {
+      border: 0 !important;
+      border-radius: 14px !important;
+      box-shadow: 0 6px 20px rgba(39, 110, 241, 0.15) !important;
+      background: #ffffff !important;
+    }
+    body.theme-business button, body.theme-business .pill-btn {
+      border: 0 !important;
+      border-radius: 9999px !important;
+      box-shadow: 0 6px 16px rgba(39, 110, 241, 0.2) !important;
+      background: #5b8def !important;
+      color: #fff !important;
+    }
+    body.theme-business .subtitle-row.is-current {
+      border: 3px solid #3b82f6 !important;
+      box-shadow: 0 8px 26px rgba(59, 130, 246, 0.35) !important;
     }
   </style>
 </head>
-<body class="bg-bg text-slate-100 min-h-screen">
+<body class="bg-bg text-slate-100 min-h-screen theme-warm">
   <div id="app-container" class="h-screen flex flex-col">
     <div id="left-panel" class="flex-none px-4 pt-4 sm:pt-6">
       <div class="top-pane-inner">
     <header class="mb-5 sm:mb-6 mobile-hide-landscape">
       <div class="header-row">
         <h1 class="pixel-title text-2xl sm:text-3xl font-bold tracking-tight">YouTube 跟讀播放器</h1>
-        <div id="historyAnchor" class="history-anchor">
-          <button id="historyToggleBtn" class="pill-btn min-h-10 px-3 py-1 text-sm">🕒 歷史</button>
-          <div id="historyPopover" class="history-pop"></div>
+        <div class="flex items-center gap-2">
+          <button id="themeToggleBtn" class="pill-btn min-h-10 px-3 py-1 text-sm">🎨 風格：暖系文青</button>
+          <div id="historyAnchor" class="history-anchor">
+            <button id="historyToggleBtn" class="pill-btn min-h-10 px-3 py-1 text-sm">🕒 歷史</button>
+            <div id="historyPopover" class="history-pop"></div>
+          </div>
         </div>
       </div>
       <p class="text-slate-300 mt-2 text-sm sm:text-base">雙語字幕、句子跳轉、單句循環、Auto-Pause、顯示控制、計數器。</p>
@@ -394,6 +432,7 @@
       urlInput: document.getElementById("urlInput"),
       loadBtn: document.getElementById("loadBtn"),
       manualOpenBtn: document.getElementById("manualOpenBtn"),
+      themeToggleBtn: document.getElementById("themeToggleBtn"),
       clearRecentBtn: document.getElementById("clearRecentBtn"),
       historyAnchor: document.getElementById("historyAnchor"),
       historyToggleBtn: document.getElementById("historyToggleBtn"),
@@ -454,6 +493,7 @@
     let sidebarHidden = false;
     let historyPinnedOpen = false;
     let intentRevealIndex = -1;
+    let currentTheme = "warm";
     const trackLabelA = "L1";
     const trackLabelB = "L2";
     let recentVideos = [];
@@ -466,6 +506,7 @@
     const uiStorageKey = () => `shadowing-ui:${currentVideoId || "unknown"}`;
     const recentVideosKey = "shadowing-recent-videos";
     const lastSessionKey = "shadowing-last-session";
+    const themeStorageKey = "shadowing-theme";
     let lastProgressSaveAt = 0;
     let pendingAutoLoadVideoId = "";
     let pendingResumeSeconds = 0;
@@ -473,6 +514,20 @@
       ui.status.textContent = msg;
       ui.status.className = "mt-3 text-sm " + (err ? "text-rose-300" : "text-slate-300");
     };
+    function applyTheme(themeName) {
+      const normalized = themeName === "hardcore" || themeName === "business" ? themeName : "warm";
+      currentTheme = normalized;
+      document.body.classList.remove("theme-warm", "theme-hardcore", "theme-business");
+      document.body.classList.add(`theme-${normalized}`);
+      const text = normalized === "hardcore" ? "🎨 風格：硬派像素" : normalized === "business" ? "🎨 風格：商業專業" : "🎨 風格：暖系文青";
+      ui.themeToggleBtn.textContent = text;
+      try { localStorage.setItem(themeStorageKey, normalized); } catch {}
+    }
+    function cycleTheme() {
+      const order = ["warm", "hardcore", "business"];
+      const i = order.indexOf(currentTheme);
+      applyTheme(order[(i + 1) % order.length]);
+    }
 
     function parseYouTubeId(input) {
       const raw = String(input || "").trim();
@@ -978,36 +1033,6 @@
         });
         ui.transcriptList.appendChild(row);
       });
-      document.querySelectorAll("[data-jump-btn]").forEach((b) => b.addEventListener("click", () => jumpTo(Number(b.getAttribute("data-jump-btn")), { increment: true })));
-      document.querySelectorAll("[data-loop-btn]").forEach((b) => b.addEventListener("click", () => {
-        const i = Number(b.getAttribute("data-loop-btn"));
-        if (activeLoop && activeLoop.index === i) return clearLoop();
-        clearLoop(); clearAutoPause(); b.classList.add("bg-emerald-400", "text-slate-900"); loopLine(i);
-      }));
-      document.querySelectorAll("[data-playpause-btn]").forEach((b) => b.addEventListener("click", () => toggleLinePlayback(Number(b.getAttribute("data-playpause-btn")))));
-      document.querySelectorAll("[data-line-rate]").forEach((b) => b.addEventListener("click", () => {
-        const i = Number(b.getAttribute("data-line-rate"));
-        const rate = Number(b.getAttribute("data-line-rate-value"));
-        playLineWithRate(i, rate);
-      }));
-      document.querySelectorAll("[data-toggle-en]").forEach((b) => b.addEventListener("click", () => {
-        const i = Number(b.getAttribute("data-toggle-en"));
-        transcript[i].showEn = !transcript[i].showEn;
-        globalLangMode = "custom";
-        saveBilingual();
-        saveUiState();
-        refreshGlobalButtons();
-        render();
-      }));
-      document.querySelectorAll("[data-toggle-zh]").forEach((b) => b.addEventListener("click", () => {
-        const i = Number(b.getAttribute("data-toggle-zh"));
-        transcript[i].showZh = !transcript[i].showZh;
-        globalLangMode = "custom";
-        saveBilingual();
-        saveUiState();
-        refreshGlobalButtons();
-        render();
-      }));
       if (intentRevealIndex >= 0) setIntentReveal(intentRevealIndex);
       applyCurrentHighlight();
       syncPlayPauseButtons();
@@ -1133,6 +1158,51 @@
     ui.showSidebarBtn.addEventListener("click", () => setSidebarHidden(false));
     ui.lineRateResetBtn.addEventListener("click", () => setAutoResetLineRate(!autoResetLineRate));
     ui.resetCountsBtn.addEventListener("click", resetCurrentVideoCounts);
+    ui.themeToggleBtn.addEventListener("click", cycleTheme);
+    ui.transcriptList.addEventListener("click", (event) => {
+      const btn = event.target.closest("button");
+      if (!btn) return;
+      if (btn.hasAttribute("data-jump-btn")) {
+        jumpTo(Number(btn.getAttribute("data-jump-btn")), { increment: true });
+        return;
+      }
+      if (btn.hasAttribute("data-loop-btn")) {
+        const i = Number(btn.getAttribute("data-loop-btn"));
+        if (activeLoop && activeLoop.index === i) clearLoop();
+        else { clearLoop(); clearAutoPause(); loopLine(i); }
+        syncPlayPauseButtons();
+        return;
+      }
+      if (btn.hasAttribute("data-playpause-btn")) {
+        toggleLinePlayback(Number(btn.getAttribute("data-playpause-btn")));
+        return;
+      }
+      if (btn.hasAttribute("data-line-rate")) {
+        playLineWithRate(Number(btn.getAttribute("data-line-rate")), Number(btn.getAttribute("data-line-rate-value")));
+        return;
+      }
+      if (btn.hasAttribute("data-toggle-en")) {
+        const i = Number(btn.getAttribute("data-toggle-en"));
+        if (!transcript[i]) return;
+        transcript[i].showEn = !transcript[i].showEn;
+        globalLangMode = "custom";
+        saveBilingual();
+        saveUiState();
+        refreshGlobalButtons();
+        render();
+        return;
+      }
+      if (btn.hasAttribute("data-toggle-zh")) {
+        const i = Number(btn.getAttribute("data-toggle-zh"));
+        if (!transcript[i]) return;
+        transcript[i].showZh = !transcript[i].showZh;
+        globalLangMode = "custom";
+        saveBilingual();
+        saveUiState();
+        refreshGlobalButtons();
+        render();
+      }
+    });
     ui.mirrorSlowBtn.addEventListener("click", () => {
       const i = getActiveLineIndex();
       if (i < 0) return;
@@ -1198,6 +1268,9 @@
     if (window.visualViewport) window.visualViewport.addEventListener("resize", syncTranscriptOffset);
     syncTranscriptOffset();
     refreshGlobalButtons();
+    let savedTheme = "warm";
+    try { savedTheme = localStorage.getItem(themeStorageKey) || "warm"; } catch {}
+    applyTheme(savedTheme);
     const lastSession = loadLastSession();
     if (lastSession) {
       pendingAutoLoadVideoId = lastSession.videoId;
