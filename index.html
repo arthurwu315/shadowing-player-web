@@ -18,8 +18,8 @@
       font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans", "Noto Sans TC", "Noto Sans JP", "Noto Sans KR", sans-serif;
     }
     #app-container { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    .top-pane { flex: 0 0 auto; max-height: 60vh; overflow: auto; position: relative; z-index: 2; }
-    .bottom-pane { flex: 1 1 auto; overflow-y: auto; min-height: 0; position: relative; z-index: 1; }
+    #left-panel { flex: 0 0 auto; max-height: 60vh; overflow-y: auto; overflow-x: hidden; position: relative; z-index: 2; }
+    #subtitle-container { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; min-height: 0; position: relative; z-index: 1; }
     .pixel-title, .count-badge { font-family: "VT323", monospace; letter-spacing: 0.03em; }
     section, dialog, .subtitle-row, button, .pill-btn, input, textarea, label {
       border-radius: 0 !important;
@@ -87,7 +87,7 @@
     .recent-chip {
       border: 2px solid #000;
       background: #ffffff;
-      padding: 0.3rem 0.5rem;
+      padding: 0.2rem 0.35rem;
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
@@ -95,7 +95,7 @@
       border-radius: 6px !important;
     }
     .history-card-title {
-      max-width: 180px;
+      max-width: 128px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -119,9 +119,9 @@
     .global-blur .subtitle-row.force-reveal .subtitle-text,
     .global-blur .subtitle-row:focus-within .subtitle-text { filter: none; opacity: 1; }
     .subtitle-row.is-current {
-      border: 3px solid #3b82f6 !important;
+      border: 3px solid #A3B18A !important;
       background: rgba(255, 221, 210, 0.5) !important;
-      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2), 0 14px 34px rgba(59, 130, 246, 0.34);
+      box-shadow: 0 0 0 1px rgba(163, 177, 138, 0.28), 0 14px 34px rgba(226, 149, 120, 0.25);
       transform: scale(1.02);
       position: relative;
       animation: border-breathe 2.4s ease-in-out infinite, active-bg-pulse 2.6s ease-in-out infinite;
@@ -133,23 +133,23 @@
       top: 0;
       bottom: 0;
       width: 5px;
-      background: #3b82f6;
+      background: #E29578;
     }
     @keyframes border-breathe {
-      0%, 100% { box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25), 0 10px 22px rgba(59, 130, 246, 0.22); }
-      50% { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4), 0 14px 30px rgba(59, 130, 246, 0.35); }
+      0%, 100% { box-shadow: 0 0 0 1px rgba(163, 177, 138, 0.25), 0 10px 22px rgba(226, 149, 120, 0.22); }
+      50% { box-shadow: 0 0 0 2px rgba(163, 177, 138, 0.45), 0 14px 30px rgba(226, 149, 120, 0.34); }
     }
     @keyframes active-bg-pulse {
       0%, 100% { background: rgba(255, 221, 210, 0.5); }
       50% { background: rgba(255, 221, 210, 0.72); }
     }
-    .bottom-pane::-webkit-scrollbar { width: 10px; }
-    .bottom-pane::-webkit-scrollbar-track { background: #d9d9d9; border-left: 2px solid #000; }
-    .bottom-pane::-webkit-scrollbar-thumb { background: #2f2f2f; border: 2px solid #000; }
-    .bottom-pane { scrollbar-color: #2f2f2f #d9d9d9; scrollbar-width: thin; }
+    #subtitle-container::-webkit-scrollbar, #left-panel::-webkit-scrollbar { width: 10px; }
+    #subtitle-container::-webkit-scrollbar-track, #left-panel::-webkit-scrollbar-track { background: #d9d9d9; border-left: 2px solid #000; }
+    #subtitle-container::-webkit-scrollbar-thumb, #left-panel::-webkit-scrollbar-thumb { background: #2f2f2f; border: 2px solid #000; }
+    #subtitle-container, #left-panel { scrollbar-color: #2f2f2f #d9d9d9; scrollbar-width: thin; }
     .text-slate-300, .text-slate-500, #status { color: #4a4a4a !important; }
     @media (min-width: 1280px) {
-      .top-pane { max-height: 100vh; height: 100vh; }
+      #left-panel { max-height: 100vh; height: 100vh; }
       .top-pane-inner { max-width: none; margin: 0 auto; width: 100%; }
       #transcriptList { max-width: 56rem; margin: 0 auto; }
       #app-container {
@@ -157,16 +157,16 @@
         grid-template-columns: clamp(360px, 35vw, 420px) 1fr;
         grid-template-rows: 100vh;
       }
-      .top-pane {
+      #left-panel {
         border-right: 2px solid #000;
       }
-      .bottom-pane {
+      #subtitle-container {
         height: 100vh;
       }
       #toggleSidebarBtn { display: inline-flex !important; }
       #showSidebarBtn { display: none; }
       #app-container.sidebar-hidden { grid-template-columns: 0 1fr; }
-      #app-container.sidebar-hidden .top-pane { display: none; }
+      #app-container.sidebar-hidden #left-panel { display: none; }
       #app-container.sidebar-hidden #showSidebarBtn { display: inline-flex; }
     }
     @media (orientation: landscape) and (max-height: 560px) {
@@ -181,7 +181,7 @@
 </head>
 <body class="bg-bg text-slate-100 min-h-screen">
   <div id="app-container" class="h-screen flex flex-col">
-    <div class="top-pane flex-none px-4 pt-4 sm:pt-6">
+    <div id="left-panel" class="flex-none px-4 pt-4 sm:pt-6">
       <div class="top-pane-inner">
     <header class="mb-5 sm:mb-6">
       <h1 class="pixel-title text-2xl sm:text-3xl font-bold tracking-tight">YouTube 跟讀播放器</h1>
@@ -256,7 +256,7 @@
       </div>
     </div>
 
-    <section id="transcriptSection" class="bottom-pane flex-1 overflow-y-auto px-4 pb-4 pt-3">
+    <section id="subtitle-container" class="flex-1 overflow-y-auto px-4 pb-4 pt-3">
       <div class="mb-2">
         <button id="showSidebarBtn" class="pill-btn hidden">🧭 顯示左側儀表板</button>
       </div>
@@ -319,7 +319,7 @@
       controlTower: document.getElementById("controlTower"),
       controlPanel: document.getElementById("controlPanel"),
       appContainer: document.getElementById("app-container"),
-      transcriptSection: document.getElementById("transcriptSection"),
+      transcriptSection: document.getElementById("subtitle-container"),
       playerShell: document.getElementById("playerShell"),
       manualDialog: document.getElementById("manualDialog"),
       manualDurationInput: document.getElementById("manualDurationInput"),
@@ -341,7 +341,6 @@
     let lineRateOverrideFrom = -1;
     let lineRateOverrideActive = false;
     let towerCollapsed = false;
-    let lastScrollY = 0;
     let playerHidden = false;
     let sidebarHidden = false;
     const trackLabelA = "L1";
@@ -355,6 +354,10 @@
     const biStorageKey = () => `shadowing-bilingual:${currentVideoId || "unknown"}`;
     const uiStorageKey = () => `shadowing-ui:${currentVideoId || "unknown"}`;
     const recentVideosKey = "shadowing-recent-videos";
+    const lastSessionKey = "shadowing-last-session";
+    let lastProgressSaveAt = 0;
+    let pendingAutoLoadVideoId = "";
+    let pendingResumeSeconds = 0;
     const setStatus = (msg, err = false) => {
       ui.status.textContent = msg;
       ui.status.className = "mt-3 text-sm " + (err ? "text-rose-300" : "text-slate-300");
@@ -570,6 +573,33 @@
       };
       try { localStorage.setItem(uiStorageKey(), JSON.stringify(payload)); } catch {}
     }
+    function saveLastSession(videoId, seconds) {
+      if (!videoId) return;
+      const fallbackLineStart = currentLineIndex >= 0 && transcript[currentLineIndex] ? Number(transcript[currentLineIndex].start || 0) : 0;
+      const payload = {
+        videoId,
+        seconds: Math.max(0, Number(seconds || 0)),
+        lineStart: Math.max(0, fallbackLineStart),
+        updatedAt: Date.now()
+      };
+      try { localStorage.setItem(lastSessionKey, JSON.stringify(payload)); } catch {}
+    }
+    function loadLastSession() {
+      try {
+        const raw = JSON.parse(localStorage.getItem(lastSessionKey) || "{}");
+        const videoId = typeof raw.videoId === "string" ? parseYouTubeId(raw.videoId) : "";
+        if (!videoId) return null;
+        const seconds = Math.max(0, Number(raw.seconds || 0));
+        const lineStart = Math.max(0, Number(raw.lineStart || 0));
+        return { videoId, seconds: seconds > 0 ? seconds : lineStart };
+      } catch { return null; }
+    }
+    function applyPendingResume(videoId) {
+      if (pendingAutoLoadVideoId !== videoId || pendingResumeSeconds <= 0) return;
+      if (playerReady && player) player.seekTo(pendingResumeSeconds, true);
+      pendingAutoLoadVideoId = "";
+      pendingResumeSeconds = 0;
+    }
     function loadUiState() {
       try {
         const s = JSON.parse(localStorage.getItem(uiStorageKey()) || "{}");
@@ -672,18 +702,16 @@
     }
     function findIdx(t) { for (let i = transcript.length - 1; i >= 0; i -= 1) if (t >= transcript[i].start) return i; return -1; }
     function applyCurrentHighlight() {
-      document.querySelectorAll("[data-line]").forEach((r) => r.classList.remove("ring-2", "ring-cyan-400", "is-current"));
+      document.querySelectorAll("[data-line]").forEach((r) => r.classList.remove("is-current"));
       const row = document.querySelector(`[data-line="${currentLineIndex}"]`);
-      if (row) row.classList.add("ring-2", "ring-cyan-400", "is-current");
+      if (row) row.classList.add("is-current");
     }
     function scrollCurrentIntoCenter() {
       const currentCard = document.querySelector(`[data-line="${currentLineIndex}"]`);
       if (!currentCard) return;
       currentCard.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-    function syncTranscriptOffset() {
-      ui.transcriptSection.style.paddingTop = "12px";
-    }
+    function syncTranscriptOffset() { ui.transcriptSection.style.paddingTop = "12px"; }
     function setCurrent(i) {
       const changed = i !== currentLineIndex;
       currentLineIndex = i;
@@ -848,6 +876,11 @@
     function tick() {
       if (!playerReady || !player || !transcript.length) return;
       const t = player.getCurrentTime();
+      const now = Date.now();
+      if (now - lastProgressSaveAt > 1000) {
+        saveLastSession(currentVideoId, t);
+        lastProgressSaveAt = now;
+      }
       const i = findIdx(t);
       if (lineRateOverrideActive && autoResetLineRate && i >= 0 && i !== lineRateOverrideFrom) {
         lineRateOverrideActive = false;
@@ -908,13 +941,39 @@
       refreshGlobalButtons();
       setGlobalBlur(globalBlurEnabled);
       clearLoop(); clearAutoPause(); completeLockIndex = null; currentLineIndex = -1;
-      if (loadBilingual()) { updateTrackLabels(); loadCounts(); renderSubtitles(); setRate(currentPlaybackRate); setStatus("已回復此影片的雙語字幕與顯示設定。"); return; }
+      if (loadBilingual()) {
+        updateTrackLabels();
+        loadCounts();
+        renderSubtitles();
+        setRate(currentPlaybackRate);
+        applyPendingResume(videoId);
+        setStatus("已回復此影片的雙語字幕與顯示設定。");
+        return;
+      }
       setStatus("正在載入字幕...");
-      try { transcript = await fetchTranscript(videoUrl, videoId); updateTrackLabels(); loadCounts(); saveBilingual(); renderSubtitles(); setRate(currentPlaybackRate); setStatus("字幕載入成功。"); }
+      try {
+        transcript = await fetchTranscript(videoUrl, videoId);
+        updateTrackLabels();
+        loadCounts();
+        saveBilingual();
+        renderSubtitles();
+        setRate(currentPlaybackRate);
+        applyPendingResume(videoId);
+        setStatus("字幕載入成功。");
+      }
       catch { transcript = []; renderSubtitles(); setStatus(FAIL_MSG, true); alert(FAIL_MSG); }
     }
 
-    window.onYouTubeIframeAPIReady = () => { playerReady = true; clearInterval(tickTimer); tickTimer = setInterval(tick, 100); setRate(currentPlaybackRate); };
+    window.onYouTubeIframeAPIReady = () => {
+      playerReady = true;
+      clearInterval(tickTimer);
+      tickTimer = setInterval(tick, 100);
+      setRate(currentPlaybackRate);
+      if (pendingAutoLoadVideoId) {
+        ui.urlInput.value = pendingAutoLoadVideoId;
+        loadVideoAndTranscript();
+      }
+    };
     ui.loadBtn.addEventListener("click", loadVideoAndTranscript);
     ui.manualOpenBtn.addEventListener("click", () => ui.manualDialog.showModal());
     ui.manualCancelBtn.addEventListener("click", () => ui.manualDialog.close());
@@ -942,15 +1001,6 @@
     });
     document.querySelectorAll("[data-rate-btn]").forEach((b) => b.addEventListener("click", () => setRate(Number(b.getAttribute("data-rate-btn")))));
     ui.urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") loadVideoAndTranscript(); });
-    ui.transcriptSection.addEventListener("scroll", () => {
-      const y = ui.transcriptSection.scrollTop || 0;
-      const delta = y - lastScrollY;
-      if (Math.abs(delta) > 10) {
-        if (delta > 0 && isPlayerPlaying()) setTowerCollapsed(true);
-        if (delta < 0) setTowerCollapsed(false);
-      }
-      lastScrollY = y;
-    }, { passive: true });
     loadRecentVideos();
     renderRecentVideos();
     setSidebarHidden(sidebarHidden);
@@ -958,7 +1008,20 @@
     if (window.visualViewport) window.visualViewport.addEventListener("resize", syncTranscriptOffset);
     syncTranscriptOffset();
     refreshGlobalButtons();
-    setStatus("尚未載入影片");
+    const lastSession = loadLastSession();
+    if (lastSession) {
+      pendingAutoLoadVideoId = lastSession.videoId;
+      pendingResumeSeconds = lastSession.seconds;
+      ui.urlInput.value = pendingAutoLoadVideoId;
+      setStatus("已找到上次練習，正在自動載入...");
+    }
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden && playerReady && player && currentVideoId) saveLastSession(currentVideoId, player.getCurrentTime());
+    });
+    window.addEventListener("beforeunload", () => {
+      if (playerReady && player && currentVideoId) saveLastSession(currentVideoId, player.getCurrentTime());
+    });
+    if (!lastSession) setStatus("尚未載入影片");
   </script>
 </body>
 </html>
