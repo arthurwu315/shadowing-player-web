@@ -2,7 +2,7 @@
 <html lang="zh-Hant" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1, maximum-scale=5, viewport-fit=cover" />
   <title>YouTube 跟讀播放器</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,10 +18,17 @@
       --radius-chip: 9999px;
       --color-ink-warm: #433D3C;
     }
+    html {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      overflow-x: hidden;
+    }
     body {
       background: #FFFDF0 !important;
       color: #433D3C !important;
       font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans", "Noto Sans TC", "Noto Sans JP", "Noto Sans KR", sans-serif;
+      overflow-x: hidden;
+      max-width: 100vw;
     }
     #app-container { height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
     #left-panel { flex: 0 0 auto; max-height: 60vh; overflow-y: auto; overflow-x: hidden; position: relative; z-index: 2; }
@@ -293,8 +300,12 @@
       .mobile-bottombar { display: flex; }
       #app-container {
         height: 100dvh;
+        max-height: 100dvh;
         overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
       }
+      html, body { max-width: 100vw; min-width: 0; }
       #left-panel {
         max-height: none;
         overflow: visible;
@@ -314,8 +325,12 @@
       .mobile-bottombar { display: none !important; }
       #app-container {
         height: 100dvh;
+        max-height: 100dvh;
         overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
       }
+      html, body { max-width: 100vw; min-width: 0; }
       #left-panel {
         max-height: none;
       }
@@ -416,6 +431,17 @@
       justify-content: space-between;
       gap: 0.5rem;
       flex-wrap: wrap;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-100%);
+      transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+      pointer-events: none;
+    }
+    .mobile-topbar.mobile-topbar-visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      pointer-events: auto;
     }
     .mobile-brand {
       font-family: "VT323", monospace;
@@ -1275,10 +1301,39 @@
     var MOBILE_TOP_BAR_HEIGHT = "56px";
     var MOBILE_LANDSCAPE_LEFT_WIDTH = "72px";
     var MOBILE_LANDSCAPE_RIGHT_WIDTH = "116px";
+    var MOBILE_TOP_BAR_SCROLL_THRESHOLD = 120;
+    function updateMobileTopBarVisibility() {
+      if (!isMobileBottomBarMode() || isMobileLandscapeMode()) return;
+      var topBar = document.getElementById("mobilePortraitTopBar");
+      if (!topBar || !ui.appContainer) return;
+      var scrollTop = ui.appContainer.scrollTop || 0;
+      var visible = scrollTop >= MOBILE_TOP_BAR_SCROLL_THRESHOLD;
+      var wasVisible = topBar.classList.contains("mobile-topbar-visible");
+      if (visible) {
+        topBar.classList.add("mobile-topbar-visible");
+        if (!wasVisible) {
+          ui.appContainer.style.paddingTop = MOBILE_TOP_BAR_HEIGHT;
+          var st = ui.appContainer.scrollTop;
+          if (st < 56) ui.appContainer.scrollTop = 0;
+        }
+      } else {
+        topBar.classList.remove("mobile-topbar-visible");
+        if (wasVisible) {
+          var prevSt = ui.appContainer.scrollTop;
+          ui.appContainer.style.paddingTop = "0";
+          ui.appContainer.scrollTop = Math.max(0, prevSt - 56);
+        }
+      }
+    }
     function syncTranscriptOffset() {
       if (isMobileBottomBarMode()) {
         ui.appContainer.style.height = "100dvh";
-        ui.appContainer.style.paddingTop = MOBILE_TOP_BAR_HEIGHT;
+        if (!isMobileLandscapeMode()) {
+          ui.appContainer.style.paddingTop = "0";
+          updateMobileTopBarVisibility();
+        } else {
+          ui.appContainer.style.paddingTop = "";
+        }
         ui.appContainer.style.paddingBottom = "100px";
         ui.appContainer.style.paddingLeft = "0";
         ui.appContainer.style.paddingRight = "0";
@@ -1870,6 +1925,7 @@
     setSidebarHidden(sidebarHidden);
     window.addEventListener("resize", syncTranscriptOffset);
     if (window.visualViewport) window.visualViewport.addEventListener("resize", syncTranscriptOffset);
+    if (ui.appContainer) ui.appContainer.addEventListener("scroll", updateMobileTopBarVisibility, { passive: true });
     window.addEventListener("orientationchange", function () {
       var run = function () {
         document.documentElement.style.height = "";
