@@ -1531,39 +1531,6 @@
         </div>
       `;
 
-      const prev = document.getElementById("mob-prev");
-      const play = document.getElementById("mob-play");
-      const loop = document.getElementById("mob-loop");
-      const next = document.getElementById("mob-next");
-      if (prev) {
-        prev.onclick = null;
-        prev.addEventListener("click", function (e) {
-          e.preventDefault();
-          if (typeof playPrevious === "function") playPrevious();
-        });
-      }
-      if (play) {
-        play.onclick = null;
-        play.addEventListener("click", function (e) {
-          e.preventDefault();
-          if (typeof togglePlay === "function") togglePlay();
-        });
-      }
-      if (loop) {
-        loop.onclick = null;
-        loop.addEventListener("click", function (e) {
-          e.preventDefault();
-          if (typeof toggleCurrentLoop === "function") toggleCurrentLoop();
-        });
-      }
-      if (next) {
-        next.onclick = null;
-        next.addEventListener("click", function (e) {
-          e.preventDefault();
-          if (typeof playNext === "function") playNext();
-        });
-      }
-
       syncPlayPauseButtons();
     }
 
@@ -1685,6 +1652,33 @@
       const idx = findSubtitleIndexById(id);
       setIntentReveal(idx);
       playSubtitle(subtitle);
+    });
+    // 手機版底部遙控器：全域事件委派 (防禦 DOM 重新渲染導致失效)
+    document.body.addEventListener("click", function (e) {
+      const mobPrevBtn = e.target.closest("#mob-prev");
+      const mobPlayBtn = e.target.closest("#mob-play");
+      const mobLoopBtn = e.target.closest("#mob-loop");
+      const mobNextBtn = e.target.closest("#mob-next");
+
+      if (mobPrevBtn) {
+        e.preventDefault();
+        if (typeof playPrevious === "function") playPrevious();
+        return;
+      }
+      if (mobPlayBtn) {
+        e.preventDefault();
+        if (typeof togglePlay === "function") togglePlay();
+        return;
+      }
+      if (mobLoopBtn) {
+        e.preventDefault();
+        if (typeof toggleCurrentLoop === "function") toggleCurrentLoop();
+        return;
+      }
+      if (mobNextBtn) {
+        e.preventDefault();
+        if (typeof playNext === "function") playNext();
+      }
     });
     ui.historyToggleBtn.addEventListener("click", () => {
       if (isMobileLayout()) {

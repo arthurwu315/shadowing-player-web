@@ -37,6 +37,8 @@
 - 多重防護觸發點：頁面 `load`、字幕重渲染後、影片載入成功後都會再次執行 `ensureMobileBottomBar()`。
 - 手機底部 `⏯️` 修復：`togglePlay()` 改為直接對 YouTube Player 狀態做全局播放/暫停切換，不再受句索引條件阻擋。
 - 手機底部按鈕綁定加固：`mob-prev/mob-play/mob-loop/mob-next` 改為 `onclick=null + addEventListener + preventDefault`，避免空包彈點擊。
+- 手機底部遙控器不死化：改用 `document.body` 全域事件委派處理 `mob-prev/play/loop/next`，DOM 重建後仍可用。
+- 取消脆弱本體綁定：移除 `ensureMobileBottomBar()` 內對按鈕直接綁 `onclick/addEventListener` 的做法。
 - Auto-Pause 自動留白模式：句尾自動暫停 `該句時長 x 1.2`，再跳到下一句。
 - 快捷大按鈕：`上一句`、`重新播放本句`、`下一句`。
 - 播放速度快捷切換：`0.75x`、`1x`、`1.25x`。
@@ -160,6 +162,10 @@
 
 ## 更新紀錄
 
+- 2026-02-22（終極修復：底部遙控器不死之身）
+  - 手機底部四鍵改為全域事件委派：在 `document.body` 監聽 `#mob-prev/#mob-play/#mob-loop/#mob-next`。
+  - 移除底部按鈕本體上的直接綁定，避免底部列重渲染後 listener 消失。
+  - 保留全域 `togglePlay()` 播放狀態切換邏輯，底部 `⏯️` 點擊與播放器狀態同步。
 - 2026-02-22（手機底部播放鍵無反應修復）
   - `togglePlay()` 改為全局播放器切換邏輯：`PLAYING -> pauseVideo()`，其餘狀態 `-> playVideo()`。
   - 在 `ensureMobileBottomBar()` 內，`#mob-play` 改為明確 `addEventListener('click')` 綁定，並加入 `preventDefault()`。
