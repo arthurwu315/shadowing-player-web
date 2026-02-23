@@ -278,7 +278,7 @@
       #left-panel { max-height: 50dvh; min-height: 50dvh; }
       #subtitle-container { min-height: 50dvh; }
     }
-    @media (max-width: 1024px) and (orientation: landscape) {
+    @media (min-width: 897px) and (max-width: 1024px) and (orientation: landscape) {
       #app-container {
         display: grid !important;
         grid-template-columns: 42% 58%;
@@ -287,6 +287,33 @@
       #left-panel, #subtitle-container { height: 100dvh; max-height: 100dvh; }
       .mobile-hide-landscape { display: none !important; }
       #subtitle-container { padding-top: 0.5rem !important; }
+    }
+    @media (max-width: 768px) and (orientation: portrait) {
+      .mobile-topbar,
+      .mobile-bottombar { display: flex; }
+      #app-container {
+        height: 100dvh;
+        overflow-y: auto;
+      }
+      #left-panel {
+        max-height: none;
+        overflow: visible;
+      }
+      #subtitle-container {
+        overflow: visible;
+      }
+    }
+    @media (max-width: 896px) and (orientation: landscape) {
+      .mobile-landscape-panel { display: flex; }
+      .mobile-topbar,
+      .mobile-bottombar { display: none !important; }
+      #app-container {
+        height: 100dvh;
+        overflow-y: auto;
+      }
+      #left-panel {
+        max-height: none;
+      }
     }
     .bottom-sheet-wrap {
       position: fixed;
@@ -360,9 +387,129 @@
       border: 3px solid #3b82f6 !important;
       box-shadow: 0 8px 26px rgba(59, 130, 246, 0.35) !important;
     }
+    .mobile-topbar,
+    .mobile-bottombar,
+    .mobile-landscape-panel {
+      display: none;
+    }
+    .mobile-topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 80;
+      height: 56px;
+      padding: 0 0.75rem;
+      background: rgba(255, 253, 246, 0.92);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-bottom: 2px solid #433D3C;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .mobile-brand {
+      font-family: "VT323", monospace;
+      font-size: 1.35rem;
+      color: #433D3C;
+      white-space: nowrap;
+    }
+    .mobile-rate-group { display: inline-flex; gap: 0.35rem; }
+    .mobile-rate-btn {
+      min-height: 32px !important;
+      padding: 0.2rem 0.55rem !important;
+      border-radius: 8px !important;
+      font-size: 0.82rem !important;
+      line-height: 1.1 !important;
+      background: #EEE3CB !important;
+      border: 2px solid #433D3C !important;
+      color: #433D3C !important;
+      box-shadow: 2px 2px 0 0 rgba(67, 61, 60, 0.2) !important;
+    }
+    .mobile-rate-btn.active {
+      background: #B7C4CF !important;
+      color: #1f2937 !important;
+      border-color: #1f2937 !important;
+    }
+    .mobile-bottombar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 80;
+      height: 64px;
+      padding: 0.45rem 0.55rem calc(0.45rem + env(safe-area-inset-bottom));
+      background: rgba(255, 253, 246, 0.94);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-top: 2px solid #433D3C;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.4rem;
+    }
+    .mobile-control-btn {
+      flex: 1 1 0;
+      min-height: 44px !important;
+      padding: 0.35rem 0.2rem !important;
+      font-size: 0.95rem !important;
+      line-height: 1.1 !important;
+      white-space: nowrap;
+      text-align: center;
+    }
+    .mobile-control-btn.active {
+      background: #A3B18A !important;
+      color: #1f2937 !important;
+      border-color: #1f2937 !important;
+      box-shadow: 2px 2px 0 0 rgba(67, 61, 60, 0.2) !important;
+    }
+    .mobile-landscape-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      height: 100dvh;
+      width: 116px;
+      z-index: 85;
+      padding: 0.5rem 0.4rem;
+      background: rgba(255, 253, 246, 0.95);
+      border-left: 2px solid #433D3C;
+      box-shadow: -2px 0 0 rgba(67, 61, 60, 0.2);
+      overflow: hidden;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .mobile-landscape-title {
+      font-family: "VT323", monospace;
+      font-size: 1.15rem;
+      text-align: center;
+      margin-bottom: 0.1rem;
+      color: #433D3C;
+      line-height: 1.1;
+    }
+    .mobile-landscape-panel .mobile-control-btn {
+      flex: 0 0 auto;
+      min-height: 40px !important;
+      font-size: 0.84rem !important;
+      padding: 0.25rem !important;
+    }
+    .mobile-landscape-panel .mobile-rate-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    @media (max-width: 1024px) {
+      .subtitle-actions { display: none !important; }
+    }
   </style>
 </head>
 <body class="bg-bg text-slate-100 min-h-screen theme-warm">
+  <div id="mobilePortraitTopBar" class="mobile-topbar" aria-label="手機直式頂部控制列">
+    <div class="mobile-brand">Shadowing</div>
+    <div class="mobile-rate-group" aria-label="全局語速">
+      <button data-rate-btn="0.75" data-rate-compact="1" class="mobile-rate-btn">0.75x</button>
+      <button data-rate-btn="1" data-rate-compact="1" class="mobile-rate-btn active">1x</button>
+      <button data-rate-btn="1.25" data-rate-compact="1" class="mobile-rate-btn">1.25x</button>
+    </div>
+  </div>
   <div id="app-container" class="h-screen flex flex-col">
     <div id="left-panel" class="flex-none px-4 pt-4 sm:pt-6">
       <div class="top-pane-inner">
@@ -457,6 +604,24 @@
       <div id="transcriptList" class="space-y-2"></div>
     </section>
   </div>
+  <div id="mobilePortraitBottomBar" class="mobile-bottombar" aria-label="手機直式底部控制列">
+    <button id="mobilePrevBtn" class="mobile-control-btn btn-secondary">⏪ 上一句</button>
+    <button id="mobileLoopBtn" class="mobile-control-btn btn-secondary">🔁 循環</button>
+    <button id="mobilePlayPauseBtn" class="mobile-control-btn btn-primary">⏯️ 播放</button>
+    <button id="mobileNextBtn" class="mobile-control-btn btn-primary">⏭️ 下一句</button>
+  </div>
+  <aside id="mobileLandscapePanel" class="mobile-landscape-panel" aria-label="手機橫式右側控制台">
+    <div class="mobile-landscape-title">CTRL</div>
+    <button id="mobileLandPlayPauseBtn" class="mobile-control-btn btn-primary">⏯️</button>
+    <button id="mobileLandLoopBtn" class="mobile-control-btn btn-secondary">🔁</button>
+    <button id="mobileLandPrevBtn" class="mobile-control-btn btn-secondary">⏪</button>
+    <button id="mobileLandNextBtn" class="mobile-control-btn btn-primary">⏭️</button>
+    <div class="mobile-rate-group" aria-label="橫式語速">
+      <button data-rate-btn="0.75" data-rate-compact="1" class="mobile-rate-btn">0.75x</button>
+      <button data-rate-btn="1" data-rate-compact="1" class="mobile-rate-btn active">1x</button>
+      <button data-rate-btn="1.25" data-rate-compact="1" class="mobile-rate-btn">1.25x</button>
+    </div>
+  </aside>
 
   <dialog id="manualDialog" class="w-[96%] max-w-4xl rounded-2xl bg-slate-900 text-slate-100 border border-slate-700 p-0">
     <div class="p-4 sm:p-5">
@@ -530,6 +695,17 @@
       appContainer: document.getElementById("app-container"),
       transcriptSection: document.getElementById("subtitle-container"),
       playerShell: document.getElementById("playerShell"),
+      mobilePortraitTopBar: document.getElementById("mobilePortraitTopBar"),
+      mobilePortraitBottomBar: document.getElementById("mobilePortraitBottomBar"),
+      mobileLandscapePanel: document.getElementById("mobileLandscapePanel"),
+      mobilePrevBtn: document.getElementById("mobilePrevBtn"),
+      mobileLoopBtn: document.getElementById("mobileLoopBtn"),
+      mobilePlayPauseBtn: document.getElementById("mobilePlayPauseBtn"),
+      mobileNextBtn: document.getElementById("mobileNextBtn"),
+      mobileLandPrevBtn: document.getElementById("mobileLandPrevBtn"),
+      mobileLandLoopBtn: document.getElementById("mobileLandLoopBtn"),
+      mobileLandPlayPauseBtn: document.getElementById("mobileLandPlayPauseBtn"),
+      mobileLandNextBtn: document.getElementById("mobileLandNextBtn"),
       manualDialog: document.getElementById("manualDialog"),
       manualDurationInput: document.getElementById("manualDurationInput"),
       manualEnInput: document.getElementById("manualEnInput"),
@@ -792,6 +968,9 @@
       }));
     }
     function isMobileLayout() { return window.matchMedia("(max-width: 1024px)").matches; }
+    function isMobilePortraitMode() { return window.matchMedia("(max-width: 768px) and (orientation: portrait)").matches; }
+    function isMobileLandscapeMode() { return window.matchMedia("(max-width: 896px) and (orientation: landscape)").matches; }
+    function isMobileControlMode() { return isMobilePortraitMode() || isMobileLandscapeMode(); }
     function closeHistorySheet() { ui.historySheetWrap.classList.remove("open"); }
     function openHistorySheet() { ui.historySheetWrap.classList.add("open"); }
     function refreshHistoryAnchorUi() {
@@ -968,7 +1147,22 @@
       if (!currentCard) return;
       currentCard.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-    function syncTranscriptOffset() { ui.transcriptSection.style.paddingTop = "12px"; }
+    function syncTranscriptOffset() {
+      if (isMobilePortraitMode()) {
+        ui.appContainer.style.paddingTop = "56px";
+        ui.appContainer.style.paddingBottom = "70px";
+        ui.appContainer.style.paddingRight = "0";
+      } else if (isMobileLandscapeMode()) {
+        ui.appContainer.style.paddingTop = "0";
+        ui.appContainer.style.paddingBottom = "0";
+        ui.appContainer.style.paddingRight = "116px";
+      } else {
+        ui.appContainer.style.paddingTop = "";
+        ui.appContainer.style.paddingBottom = "";
+        ui.appContainer.style.paddingRight = "";
+      }
+      ui.transcriptSection.style.paddingTop = "12px";
+    }
     function setCurrent(i) {
       const changed = i !== state.currentIndex;
       state.currentIndex = i;
@@ -1026,10 +1220,15 @@
       state.masterSpeed = rate;
       if (playerReady && player) player.setPlaybackRate(rate);
       document.querySelectorAll("[data-rate-btn]").forEach((b) => {
+        const compact = b.hasAttribute("data-rate-compact");
         const on = Number(b.getAttribute("data-rate-btn")) === rate;
-        b.className = on
-          ? "rate-btn min-h-12 px-4 rounded-xl border border-cyan-300 bg-cyan-400 text-slate-900 font-semibold"
-          : "rate-btn min-h-12 px-4 rounded-xl border border-slate-600 bg-slate-800";
+        if (compact) {
+          b.className = on ? "mobile-rate-btn active" : "mobile-rate-btn";
+        } else {
+          b.className = on
+            ? "rate-btn min-h-12 px-4 rounded-xl border border-cyan-300 bg-cyan-400 text-slate-900 font-semibold"
+            : "rate-btn min-h-12 px-4 rounded-xl border border-slate-600 bg-slate-800";
+        }
       });
       if (focusModeEnabled) render();
       else applyCurrentHighlight();
@@ -1054,6 +1253,12 @@
         btn.textContent = state.loopModeEnabled && state.loopIndex === id ? "↻ 取消" : "↻ 循環";
       });
       ui.topPlayPauseBtn.textContent = playing ? "⏸️ 暫停" : "▶️ 播放";
+      if (ui.mobilePlayPauseBtn) ui.mobilePlayPauseBtn.textContent = playing ? "⏯️ 暫停" : "⏯️ 播放";
+      if (ui.mobileLandPlayPauseBtn) ui.mobileLandPlayPauseBtn.textContent = playing ? "⏯️ 暫停" : "⏯️ 播放";
+      const activeLine = state.currentIndex >= 0 ? state.subtitles[state.currentIndex] : null;
+      const loopActive = Boolean(state.loopModeEnabled && activeLine && state.loopIndex === activeLine.id);
+      if (ui.mobileLoopBtn) ui.mobileLoopBtn.classList.toggle("active", loopActive);
+      if (ui.mobileLandLoopBtn) ui.mobileLandLoopBtn.classList.toggle("active", loopActive);
     }
     function toggleLinePlayback(i) {
       if (!playerReady || !player || !state.subtitles[i]) return;
@@ -1183,7 +1388,7 @@
         row.className = `subtitle-row subtitle-card rounded-xl border border-slate-700 bg-line/70 p-2.5 sm:p-3${hiddenClass}${activeClass}`;
         row.setAttribute("data-line", String(i));
         row.setAttribute("data-id", line.id);
-        row.innerHTML = `<div class="subtitle-meta"><button data-action="jump" data-id="${line.id}" class="timestamp btn-secondary min-h-10 px-3 py-1.5 text-sm">${fmt(line.start)}</button><span data-count-label="${line.id}" class="text-xs text-slate-500">x ${count}</span></div><div class="subtitle-content flex flex-col gap-2">${zhBlock}${enBlock}</div><div class="subtitle-actions mt-2"><button data-action="play" data-id="${line.id}" class="btn-primary min-h-10 px-4 text-sm">${playPauseLabel}</button><button data-action="loop" data-id="${line.id}" class="btn-secondary min-h-10 px-4 text-sm">${state.loopIndex === line.id ? "↻ 取消" : "↻ 循環"}</button></div>`;
+        row.innerHTML = `<div class="subtitle-meta"><button data-action="jump" data-id="${line.id}" class="timestamp btn-secondary min-h-10 px-3 py-1.5 text-sm">${fmt(line.start)}</button><span data-count-label="${line.id}" class="text-xs text-slate-500">x ${count}</span></div><div class="subtitle-content flex flex-col gap-2">${zhBlock}${enBlock}</div><div class="subtitle-actions mt-2"><button data-action="play" data-id="${line.id}" class="btn-primary min-h-10 px-4 text-sm">${playPauseLabel}</button><button data-action="loop" data-id="${line.id}" class="btn-secondary min-h-10 px-4 text-sm">${state.loopModeEnabled && state.loopIndex === line.id ? "↻ 取消" : "↻ 循環"}</button></div>`;
         ui.transcriptList.appendChild(row);
       });
       if (state.currentIndex !== null) {
@@ -1310,6 +1515,14 @@
     ui.prevBtn.addEventListener("click", playPrevious);
     ui.replayBtn.addEventListener("click", () => { if (state.subtitles.length) jumpTo(Number.isInteger(state.currentIndex) && state.currentIndex >= 0 ? state.currentIndex : 0, { increment: true }); });
     ui.nextBtn.addEventListener("click", playNext);
+    ui.mobilePrevBtn?.addEventListener("click", playPrevious);
+    ui.mobileNextBtn?.addEventListener("click", playNext);
+    ui.mobilePlayPauseBtn?.addEventListener("click", togglePlay);
+    ui.mobileLoopBtn?.addEventListener("click", toggleCurrentLoop);
+    ui.mobileLandPrevBtn?.addEventListener("click", playPrevious);
+    ui.mobileLandNextBtn?.addEventListener("click", playNext);
+    ui.mobileLandPlayPauseBtn?.addEventListener("click", togglePlay);
+    ui.mobileLandLoopBtn?.addEventListener("click", toggleCurrentLoop);
     ui.autoPauseToggle.addEventListener("change", (e) => { autoPauseEnabled = Boolean(e.target.checked); clearAutoPause(); setStatus(autoPauseEnabled ? "Auto-Pause 已開啟" : "Auto-Pause 已關閉"); });
     ui.globalShowEnBtn.addEventListener("click", () => applyDisplayMode("L1"));
     ui.globalShowZhBtn.addEventListener("click", () => applyDisplayMode("L2"));
@@ -1336,7 +1549,8 @@
         case "jump": {
           const idx = findSubtitleIndexById(id);
           setIntentReveal(idx);
-          jumpToSubtitle(subtitle);
+          if (isMobileControlMode()) playSubtitle(subtitle);
+          else jumpToSubtitle(subtitle);
           break;
         }
         case "play":
@@ -1346,6 +1560,19 @@
           toggleLoop(subtitle);
           break;
       }
+    });
+    document.body.addEventListener("click", function (e) {
+      if (!isMobileControlMode()) return;
+      const card = e.target.closest(".subtitle-row[data-id]");
+      if (!card) return;
+      const clickedButton = e.target.closest("button");
+      if (clickedButton) return;
+      const id = card.getAttribute("data-id");
+      const subtitle = findSubtitleById(id);
+      if (!subtitle) return;
+      const idx = findSubtitleIndexById(id);
+      setIntentReveal(idx);
+      playSubtitle(subtitle);
     });
     ui.historyToggleBtn.addEventListener("click", () => {
       if (isMobileLayout()) {
