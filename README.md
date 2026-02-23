@@ -35,6 +35,8 @@
 - 手機底部控制列高度保底：`#mobile-bottom-bar` 設定 `min-h-[70px]`，避免高度坍縮造成視覺空白。
 - 手機底部遙控器保鑣機制：改為 `ensureMobileBottomBar()` 動態注入，若 DOM 遺失會自動重建並重綁事件。
 - 多重防護觸發點：頁面 `load`、字幕重渲染後、影片載入成功後都會再次執行 `ensureMobileBottomBar()`。
+- 手機底部 `⏯️` 修復：`togglePlay()` 改為直接對 YouTube Player 狀態做全局播放/暫停切換，不再受句索引條件阻擋。
+- 手機底部按鈕綁定加固：`mob-prev/mob-play/mob-loop/mob-next` 改為 `onclick=null + addEventListener + preventDefault`，避免空包彈點擊。
 - Auto-Pause 自動留白模式：句尾自動暫停 `該句時長 x 1.2`，再跳到下一句。
 - 快捷大按鈕：`上一句`、`重新播放本句`、`下一句`。
 - 播放速度快捷切換：`0.75x`、`1x`、`1.25x`。
@@ -158,6 +160,10 @@
 
 ## 更新紀錄
 
+- 2026-02-22（手機底部播放鍵無反應修復）
+  - `togglePlay()` 改為全局播放器切換邏輯：`PLAYING -> pauseVideo()`，其餘狀態 `-> playVideo()`。
+  - 在 `ensureMobileBottomBar()` 內，`#mob-play` 改為明確 `addEventListener('click')` 綁定，並加入 `preventDefault()`。
+  - 同步檢查與加固 `#mob-prev/#mob-loop/#mob-next` 三鍵綁定，確保對應 `playPrevious/toggleCurrentLoop/playNext` 穩定可用。
 - 2026-02-22（終極暴力修復：底部遙控器 JS 強制注入）
   - 移除失效的靜態 `#mobile-bottom-bar` 區塊，改用 `ensureMobileBottomBar()` 在 JS 端動態生成。
   - 函數會在 bar 不存在時自動建立外殼、以 `innerHTML` 注入四顆按鈕（`⏪ ⏯️ 🔁 ⏭️`），並以 inline style 強制可視。

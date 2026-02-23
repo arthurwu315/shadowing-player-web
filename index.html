@@ -1328,8 +1328,18 @@
       return state.subtitles.length ? 0 : -1;
     }
     function togglePlay() {
-      const i = getActiveLineIndex();
-      if (i >= 0) toggleLinePlayback(i);
+      if (!player || typeof player.getPlayerState !== "function") {
+        console.warn("YouTube Player 尚未準備好");
+        return;
+      }
+
+      const state = player.getPlayerState();
+      if (state === YT.PlayerState.PLAYING) {
+        player.pauseVideo();
+      } else {
+        player.playVideo();
+      }
+      syncPlayPauseButtons();
     }
     function playPrevious() {
       if (!state.subtitles.length) return;
@@ -1525,10 +1535,34 @@
       const play = document.getElementById("mob-play");
       const loop = document.getElementById("mob-loop");
       const next = document.getElementById("mob-next");
-      if (prev) prev.onclick = () => { if (typeof playPrevious === "function") playPrevious(); };
-      if (play) play.onclick = () => { if (typeof togglePlay === "function") togglePlay(); };
-      if (loop) loop.onclick = () => { if (typeof toggleCurrentLoop === "function") toggleCurrentLoop(); };
-      if (next) next.onclick = () => { if (typeof playNext === "function") playNext(); };
+      if (prev) {
+        prev.onclick = null;
+        prev.addEventListener("click", function (e) {
+          e.preventDefault();
+          if (typeof playPrevious === "function") playPrevious();
+        });
+      }
+      if (play) {
+        play.onclick = null;
+        play.addEventListener("click", function (e) {
+          e.preventDefault();
+          if (typeof togglePlay === "function") togglePlay();
+        });
+      }
+      if (loop) {
+        loop.onclick = null;
+        loop.addEventListener("click", function (e) {
+          e.preventDefault();
+          if (typeof toggleCurrentLoop === "function") toggleCurrentLoop();
+        });
+      }
+      if (next) {
+        next.onclick = null;
+        next.addEventListener("click", function (e) {
+          e.preventDefault();
+          if (typeof playNext === "function") playNext();
+        });
+      }
 
       syncPlayPauseButtons();
     }
