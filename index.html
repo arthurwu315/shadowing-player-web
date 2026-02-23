@@ -299,12 +299,13 @@
         max-height: none;
         overflow: visible;
       }
-      #subtitle-container { overflow: visible; padding-bottom: 96px !important; }
+      #subtitle-container { overflow: visible; padding-bottom: 100px !important; }
       #controlTower .control-panel {
         max-height: none !important;
         overflow: visible !important;
       }
       .playback-main-nav { display: none !important; }
+      #stopLoopBtn { display: none !important; }
     }
     @media (min-width: 769px) and (max-width: 896px) and (orientation: landscape) {
       .mobile-landscape-panel { display: flex; }
@@ -450,6 +451,36 @@
       align-items: center;
       justify-content: space-around;
       gap: 0.4rem;
+    }
+    #mobile-bottom-bar {
+      background: #fffdf0;
+      border-top: 2px solid #433D3C;
+      box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.05);
+    }
+    #mobile-bottom-bar #mob-play {
+      background: #B7C4CF !important;
+      border-color: #433D3C !important;
+      color: #433D3C !important;
+    }
+    body.theme-business #mobile-bottom-bar {
+      background: #f8fbff;
+      border-top: 1px solid #d4e4ff;
+      box-shadow: 0 -5px 15px rgba(39, 110, 241, 0.12);
+    }
+    body.theme-business #mobile-bottom-bar #mob-play {
+      background: #5b8def !important;
+      border-color: #3d67b3 !important;
+      color: #ffffff !important;
+    }
+    body.theme-hardcore #mobile-bottom-bar {
+      background: #fff;
+      border-top: 2px solid #000;
+      box-shadow: 0 -5px 0 rgba(0, 0, 0, 1);
+    }
+    body.theme-hardcore #mobile-bottom-bar #mob-play {
+      background: #ffffff !important;
+      border-color: #000 !important;
+      color: #000 !important;
     }
     .mobile-control-btn {
       flex: 1 1 0;
@@ -608,11 +639,13 @@
       <div id="transcriptList" class="space-y-2"></div>
     </section>
   </div>
-  <div id="mobilePortraitBottomBar" class="mobile-bottombar" aria-label="手機直式底部控制列">
-    <button id="mobilePrevBtn" class="mobile-control-btn btn-secondary">⏪ 上一句</button>
-    <button id="mobilePlayPauseBtn" class="mobile-control-btn btn-primary">⏯️ 播放</button>
-    <button id="mobileLoopBtn" class="mobile-control-btn btn-secondary">🔁 循環</button>
-    <button id="mobileNextBtn" class="mobile-control-btn btn-primary">⏭️ 下一句</button>
+  <div id="mobile-bottom-bar" class="mobile-bottombar md:hidden fixed bottom-0 left-0 w-full z-[100] bg-white/90 backdrop-blur-md border-t-2 border-gray-800 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] pb-6" aria-label="手機直式底部控制列">
+    <div class="flex justify-around items-center p-3 max-w-md mx-auto w-full">
+      <button id="mob-prev" class="mobile-control-btn text-2xl p-2 active:scale-95 transition-transform">⏪</button>
+      <button id="mob-play" class="mobile-control-btn text-3xl p-3 bg-blue-200 rounded-full border-2 border-gray-800 active:scale-95 transition-transform shadow-sm">⏯️</button>
+      <button id="mob-loop" class="mobile-control-btn text-2xl p-2 active:scale-95 transition-transform">🔁</button>
+      <button id="mob-next" class="mobile-control-btn text-2xl p-2 active:scale-95 transition-transform">⏭️</button>
+    </div>
   </div>
   <aside id="mobileLandscapePanel" class="mobile-landscape-panel" aria-label="手機橫式右側控制台">
     <div class="mobile-landscape-title">CTRL</div>
@@ -700,12 +733,12 @@
       transcriptSection: document.getElementById("subtitle-container"),
       playerShell: document.getElementById("playerShell"),
       mobilePortraitTopBar: document.getElementById("mobilePortraitTopBar"),
-      mobilePortraitBottomBar: document.getElementById("mobilePortraitBottomBar"),
+      mobilePortraitBottomBar: document.getElementById("mobile-bottom-bar"),
       mobileLandscapePanel: document.getElementById("mobileLandscapePanel"),
-      mobilePrevBtn: document.getElementById("mobilePrevBtn"),
-      mobileLoopBtn: document.getElementById("mobileLoopBtn"),
-      mobilePlayPauseBtn: document.getElementById("mobilePlayPauseBtn"),
-      mobileNextBtn: document.getElementById("mobileNextBtn"),
+      mobilePrevBtn: document.getElementById("mob-prev"),
+      mobileLoopBtn: document.getElementById("mob-loop"),
+      mobilePlayPauseBtn: document.getElementById("mob-play"),
+      mobileNextBtn: document.getElementById("mob-next"),
       mobileLandPrevBtn: document.getElementById("mobileLandPrevBtn"),
       mobileLandLoopBtn: document.getElementById("mobileLandLoopBtn"),
       mobileLandPlayPauseBtn: document.getElementById("mobileLandPlayPauseBtn"),
@@ -1154,7 +1187,7 @@
     function syncTranscriptOffset() {
       if (isMobileBottomBarMode()) {
         ui.appContainer.style.paddingTop = "56px";
-        ui.appContainer.style.paddingBottom = "84px";
+        ui.appContainer.style.paddingBottom = "100px";
         ui.appContainer.style.paddingRight = "0";
       } else if (isMobileLandscapeMode()) {
         ui.appContainer.style.paddingTop = "0";
