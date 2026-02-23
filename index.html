@@ -457,6 +457,7 @@
       border-top: 2px solid #433D3C;
       box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.05);
       min-height: 70px;
+      touch-action: manipulation;
     }
     #mobile-bottom-bar button {
       display: inline-flex !important;
@@ -1332,12 +1333,15 @@
         console.warn("YouTube Player 尚未準備好");
         return;
       }
-
-      const state = player.getPlayerState();
-      if (state === YT.PlayerState.PLAYING) {
-        player.pauseVideo();
-      } else {
-        player.playVideo();
+      try {
+        const ps = player.getPlayerState();
+        if (ps === YT.PlayerState.PLAYING) {
+          player.pauseVideo();
+        } else {
+          player.playVideo();
+        }
+      } catch (err) {
+        console.warn("togglePlay error", err);
       }
       syncPlayPauseButtons();
     }
@@ -1523,11 +1527,11 @@
       bar.setAttribute("aria-label", "手機直式底部控制列");
 
       bar.innerHTML = `
-        <div style="display: flex; justify-content: space-around; align-items: center; width: 100%; max-width: 400px; padding: 0 10px;">
-          <button id="mob-prev" style="font-size: 28px; padding: 10px; color: #000; z-index: 100000; cursor: pointer;">⏪</button>
-          <button id="mob-play" style="font-size: 32px; padding: 10px 20px; background: #e0f2fe; border: 2px solid #111827; border-radius: 50px; color: #000; z-index: 100000; cursor: pointer;">⏯️</button>
-          <button id="mob-loop" style="font-size: 28px; padding: 10px; color: #000; z-index: 100000; cursor: pointer;">🔁</button>
-          <button id="mob-next" style="font-size: 28px; padding: 10px; color: #000; z-index: 100000; cursor: pointer;">⏭️</button>
+        <div style="display: flex; justify-content: space-around; align-items: center; width: 100%; max-width: 400px; padding: 0 10px; touch-action: manipulation;">
+          <button type="button" id="mob-prev" style="font-size: 28px; padding: 10px; color: #000; z-index: 100000; cursor: pointer; touch-action: manipulation;">⏪</button>
+          <button type="button" id="mob-play" style="font-size: 32px; padding: 10px 20px; background: #e0f2fe; border: 2px solid #111827; border-radius: 50px; color: #000; z-index: 100000; cursor: pointer; touch-action: manipulation;">⏯️</button>
+          <button type="button" id="mob-loop" style="font-size: 28px; padding: 10px; color: #000; z-index: 100000; cursor: pointer; touch-action: manipulation;">🔁</button>
+          <button type="button" id="mob-next" style="font-size: 28px; padding: 10px; color: #000; z-index: 100000; cursor: pointer; touch-action: manipulation;">⏭️</button>
         </div>
       `;
 
@@ -1653,33 +1657,49 @@
       setIntentReveal(idx);
       playSubtitle(subtitle);
     });
-    // 手機版底部遙控器：全域事件委派 (防禦 DOM 重新渲染導致失效)
-    document.body.addEventListener("click", function (e) {
-      const mobPrevBtn = e.target.closest("#mob-prev");
-      const mobPlayBtn = e.target.closest("#mob-play");
-      const mobLoopBtn = e.target.closest("#mob-loop");
-      const mobNextBtn = e.target.closest("#mob-next");
-
-      if (mobPrevBtn) {
+    // 手機版底部遙控器：全域事件委派 (click + touchend)，touchend 後略過緊接的 click 避免重複觸發
+    var lastMobTouch = { target: null, time: 0 };
+    function handleMobileBottomBarInput(e) {
+      var t = e.target;
+      if (!t || !t.closest) return;
+      var mobPrev = t.closest("#mob-prev");
+      var mobPlay = t.closest("#mob-play");
+      var mobLoop = t.closest("#mob-loop");
+      var mobNext = t.closest("#mob-next");
+      if (!mobPrev && !mobPlay && !mobLoop && !mobNext) return;
+      if (e.type === "click" && lastMobTouch.target && (Date.now() - lastMobTouch.time) < 400) {
+        var hit = mobPrev || mobPlay || mobLoop || mobNext;
+        if (hit && hit === lastMobTouch.target) {
+          e.preventDefault();
+          return;
+        }
+      }
+      if (e.type === "touchend") {
+        lastMobTouch.target = mobPrev || mobPlay || mobLoop || mobNext;
+        lastMobTouch.time = Date.now();
+      }
+      if (mobPrev) {
         e.preventDefault();
         if (typeof playPrevious === "function") playPrevious();
         return;
       }
-      if (mobPlayBtn) {
+      if (mobPlay) {
         e.preventDefault();
         if (typeof togglePlay === "function") togglePlay();
         return;
       }
-      if (mobLoopBtn) {
+      if (mobLoop) {
         e.preventDefault();
         if (typeof toggleCurrentLoop === "function") toggleCurrentLoop();
         return;
       }
-      if (mobNextBtn) {
+      if (mobNext) {
         e.preventDefault();
         if (typeof playNext === "function") playNext();
       }
-    });
+    }
+    document.body.addEventListener("click", handleMobileBottomBarInput);
+    document.body.addEventListener("touchend", handleMobileBottomBarInput, { passive: false });
     ui.historyToggleBtn.addEventListener("click", () => {
       if (isMobileLayout()) {
         openHistorySheet();

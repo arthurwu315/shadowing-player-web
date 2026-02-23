@@ -39,6 +39,7 @@
 - 手機底部按鈕綁定加固：`mob-prev/mob-play/mob-loop/mob-next` 改為 `onclick=null + addEventListener + preventDefault`，避免空包彈點擊。
 - 手機底部遙控器不死化：改用 `document.body` 全域事件委派處理 `mob-prev/play/loop/next`，DOM 重建後仍可用。
 - 取消脆弱本體綁定：移除 `ensureMobileBottomBar()` 內對按鈕直接綁 `onclick/addEventListener` 的做法。
+- 手機底部功能列觸控除錯：同時監聽 `click` 與 `touchend`，避免行動裝置僅觸發 touch 導致無反應；按鈕加 `type="button"` 與 `touch-action: manipulation`，並在 touchend 後略過 400ms 內同按鈕的 click 以防重複觸發。
 - Auto-Pause 自動留白模式：句尾自動暫停 `該句時長 x 1.2`，再跳到下一句。
 - 快捷大按鈕：`上一句`、`重新播放本句`、`下一句`。
 - 播放速度快捷切換：`0.75x`、`1x`、`1.25x`。
@@ -162,6 +163,11 @@
 
 ## 更新紀錄
 
+- 2026-02-22（底部功能列觸控除錯）
+  - 底部四鍵改為共用 `handleMobileBottomBarInput`，`document.body` 同時監聽 `click` 與 `touchend`（`touchend` 使用 `passive: false` 以便 `preventDefault`），解決行動裝置上僅觸發 touch 時無反應問題。
+  - 加入 touchend/click 防重複：touchend 時記錄按鈕與時間，400ms 內同按鈕的 click 略過，避免一次觸控觸發兩次動作。
+  - 四顆按鈕加上 `type="button"`，底部列與按鈕加上 `touch-action: manipulation` 以減少 300ms 延遲。
+  - `togglePlay()` 維持使用 `ps` 變數取得播放狀態，避免遮蔽全域 `state`，並以 try/catch 防止例外中斷。
 - 2026-02-22（終極修復：底部遙控器不死之身）
   - 手機底部四鍵改為全域事件委派：在 `document.body` 監聽 `#mob-prev/#mob-play/#mob-loop/#mob-next`。
   - 移除底部按鈕本體上的直接綁定，避免底部列重渲染後 listener 消失。
