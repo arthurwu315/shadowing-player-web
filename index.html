@@ -456,6 +456,15 @@
       background: #fffdf0;
       border-top: 2px solid #433D3C;
       box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.05);
+      min-height: 70px;
+    }
+    #mobile-bottom-bar button {
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+      opacity: 1 !important;
+      visibility: visible !important;
+      color: #111827 !important;
     }
     #mobile-bottom-bar #mob-play {
       background: #B7C4CF !important;
@@ -639,12 +648,12 @@
       <div id="transcriptList" class="space-y-2"></div>
     </section>
   </div>
-  <div id="mobile-bottom-bar" class="mobile-bottombar md:hidden fixed bottom-0 left-0 w-full z-[100] bg-white/90 backdrop-blur-md border-t-2 border-gray-800 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] pb-6" aria-label="手機直式底部控制列">
+  <div id="mobile-bottom-bar" class="mobile-bottombar md:hidden fixed bottom-0 left-0 w-full z-[100] min-h-[70px] bg-white/90 backdrop-blur-md border-t-2 border-gray-800 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] pb-6" aria-label="手機直式底部控制列">
     <div class="flex justify-around items-center p-3 max-w-md mx-auto w-full">
-      <button id="mob-prev" class="mobile-control-btn text-2xl p-2 active:scale-95 transition-transform">⏪</button>
-      <button id="mob-play" class="mobile-control-btn text-3xl p-3 bg-blue-200 rounded-full border-2 border-gray-800 active:scale-95 transition-transform shadow-sm">⏯️</button>
-      <button id="mob-loop" class="mobile-control-btn text-2xl p-2 active:scale-95 transition-transform">🔁</button>
-      <button id="mob-next" class="mobile-control-btn text-2xl p-2 active:scale-95 transition-transform">⏭️</button>
+      <button id="mob-prev" class="mobile-control-btn text-2xl p-2 text-gray-900 active:scale-95 transition-transform">⏪</button>
+      <button id="mob-play" class="mobile-control-btn text-3xl p-3 bg-blue-200 text-gray-900 rounded-full border-2 border-gray-800 shadow-sm active:scale-95 transition-transform">⏯️</button>
+      <button id="mob-loop" class="mobile-control-btn text-2xl p-2 text-gray-900 active:scale-95 transition-transform">🔁</button>
+      <button id="mob-next" class="mobile-control-btn text-2xl p-2 text-gray-900 active:scale-95 transition-transform">⏭️</button>
     </div>
   </div>
   <aside id="mobileLandscapePanel" class="mobile-landscape-panel" aria-label="手機橫式右側控制台">
