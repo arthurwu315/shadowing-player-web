@@ -23,7 +23,7 @@
       color: #433D3C !important;
       font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans", "Noto Sans TC", "Noto Sans JP", "Noto Sans KR", sans-serif;
     }
-    #app-container { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    #app-container { height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
     #left-panel { flex: 0 0 auto; max-height: 60vh; overflow-y: auto; overflow-x: hidden; position: relative; z-index: 2; }
     #subtitle-container { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; min-height: 0; min-width: 0; width: 100%; position: relative; z-index: 1; }
     .pixel-title, .count-badge { font-family: "VT323", monospace; letter-spacing: 0.03em; }
@@ -308,6 +308,7 @@
       #stopLoopBtn { display: none !important; }
     }
     @media (min-width: 769px) and (max-width: 896px) and (orientation: landscape) {
+      .mobile-landscape-left { display: flex !important; }
       .mobile-landscape-panel { display: flex; }
       .mobile-topbar,
       .mobile-bottombar { display: none !important; }
@@ -393,7 +394,8 @@
     }
     .mobile-topbar,
     .mobile-bottombar,
-    .mobile-landscape-panel {
+    .mobile-landscape-panel,
+    .mobile-landscape-left {
       display: none;
     }
     .mobile-topbar {
@@ -402,21 +404,43 @@
       left: 0;
       right: 0;
       z-index: 80;
-      height: 56px;
-      padding: 0 0.75rem;
+      min-height: 52px;
+      height: auto;
+      padding: 0.4rem 0.75rem;
       background: rgba(255, 253, 246, 0.92);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       border-bottom: 2px solid #433D3C;
+      display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 0.5rem;
+      flex-wrap: wrap;
     }
     .mobile-brand {
       font-family: "VT323", monospace;
-      font-size: 1.35rem;
+      font-size: 1.25rem;
       color: #433D3C;
       white-space: nowrap;
+    }
+    .mobile-topbar-sep { font-size: 0.75rem; }
+    .mobile-display-group { display: inline-flex; gap: 0.2rem; flex-wrap: wrap; }
+    .mobile-display-btn {
+      min-width: 28px;
+      min-height: 28px;
+      padding: 0.15rem 0.35rem;
+      font-size: 0.7rem;
+      line-height: 1.1;
+      border-radius: 6px;
+      border: 1px solid #433D3C;
+      background: #EEE3CB;
+      color: #433D3C;
+      font-weight: 600;
+    }
+    .mobile-display-btn.active {
+      background: #B7C4CF;
+      border-color: #2b2d42;
+      color: #1f2937;
     }
     .mobile-rate-group { display: inline-flex; gap: 0.35rem; }
     .mobile-rate-btn {
@@ -541,6 +565,32 @@
       flex-direction: column;
       gap: 0.3rem;
     }
+    .mobile-landscape-left {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 72px;
+      height: 100dvh;
+      z-index: 84;
+      padding: 0.5rem 0.35rem;
+      background: rgba(255, 253, 246, 0.95);
+      border-right: 2px solid #433D3C;
+      box-shadow: 2px 0 0 rgba(67, 61, 60, 0.15);
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      overflow-y: auto;
+    }
+    .mobile-landscape-left-brand {
+      font-family: "VT323", monospace;
+      font-size: 1rem;
+      color: #433D3C;
+      margin-bottom: 0.25rem;
+      line-height: 1.1;
+    }
+    .mobile-landscape-left .mobile-rate-group { flex-direction: column; }
+    .mobile-landscape-left-display .mobile-display-btn { min-width: 36px; width: 100%; }
     @media (max-width: 1024px) {
       .subtitle-actions { display: none !important; }
     }
@@ -548,13 +598,36 @@
 </head>
 <body class="bg-bg text-slate-100 min-h-screen theme-warm">
   <div id="mobilePortraitTopBar" class="mobile-topbar" aria-label="手機直式頂部控制列">
-    <div class="mobile-brand">Shadowing</div>
-    <div class="mobile-rate-group" aria-label="全局語速">
+    <div class="mobile-brand pixel-title text-lg">跟讀</div>
+    <div class="mobile-topbar-center flex flex-wrap items-center gap-1 sm:gap-2">
+      <div class="mobile-rate-group" aria-label="語速">
+        <button data-rate-btn="0.75" data-rate-compact="1" class="mobile-rate-btn">0.75x</button>
+        <button data-rate-btn="1" data-rate-compact="1" class="mobile-rate-btn active">1x</button>
+        <button data-rate-btn="1.25" data-rate-compact="1" class="mobile-rate-btn">1.25x</button>
+      </div>
+      <span class="mobile-topbar-sep hidden sm:inline text-slate-400">|</span>
+      <div class="mobile-display-group flex items-center gap-1" aria-label="字幕顯示">
+        <button type="button" id="mobileTopL1" class="mobile-display-btn" title="只顯示 L1">L1</button>
+        <button type="button" id="mobileTopL2" class="mobile-display-btn" title="只顯示 L2">L2</button>
+        <button type="button" id="mobileTopBoth" class="mobile-display-btn active" title="雙語">雙語</button>
+        <button type="button" id="mobileTopBlur" class="mobile-display-btn" title="盲聽">盲聽</button>
+      </div>
+    </div>
+  </div>
+  <aside id="mobileLandscapeLeftBar" class="mobile-landscape-left" aria-label="手機橫式左側列">
+    <div class="mobile-landscape-left-brand pixel-title">跟讀</div>
+    <div class="mobile-rate-group" aria-label="語速">
       <button data-rate-btn="0.75" data-rate-compact="1" class="mobile-rate-btn">0.75x</button>
       <button data-rate-btn="1" data-rate-compact="1" class="mobile-rate-btn active">1x</button>
       <button data-rate-btn="1.25" data-rate-compact="1" class="mobile-rate-btn">1.25x</button>
     </div>
-  </div>
+    <div class="mobile-landscape-left-display flex flex-col gap-1" aria-label="字幕">
+      <button type="button" id="mobileLandL1" class="mobile-display-btn">L1</button>
+      <button type="button" id="mobileLandL2" class="mobile-display-btn">L2</button>
+      <button type="button" id="mobileLandBoth" class="mobile-display-btn active">雙語</button>
+      <button type="button" id="mobileLandBlur" class="mobile-display-btn">盲聽</button>
+    </div>
+  </aside>
   <div id="app-container" class="h-screen flex flex-col">
     <div id="left-panel" class="flex-none px-4 pt-4 sm:pt-6">
       <div class="top-pane-inner">
@@ -1108,6 +1181,16 @@
       ui.globalShowBothBtn.textContent = `🌐 ${trackLabelA}+${trackLabelB}`;
       ui.hidePlayerBtn.textContent = playerHidden ? "🎬 顯示播放器" : "🎬 隱藏播放器";
       ui.toggleSidebarBtn.textContent = sidebarHidden ? "🧭 顯示左側" : "🧭 隱藏左側";
+      ["mobileTopL1", "mobileTopL2", "mobileTopBoth", "mobileLandL1", "mobileLandL2", "mobileLandBoth"].forEach(function (id) {
+        var btn = document.getElementById(id);
+        if (!btn) return;
+        var mode = id.indexOf("Both") >= 0 ? "both" : id.indexOf("L2") >= 0 ? "L2" : "L1";
+        btn.classList.toggle("active", state.displayMode === mode);
+      });
+      ["mobileTopBlur", "mobileLandBlur"].forEach(function (id) {
+        var btn = document.getElementById(id);
+        if (btn) btn.classList.toggle("active", globalBlurEnabled);
+      });
     }
     function setTowerCollapsed(collapsed) {
       towerCollapsed = Boolean(collapsed);
@@ -1189,18 +1272,27 @@
       if (!currentCard) return;
       currentCard.scrollIntoView({ behavior: "smooth", block: "center" });
     }
+    var MOBILE_TOP_BAR_HEIGHT = "56px";
+    var MOBILE_LANDSCAPE_LEFT_WIDTH = "72px";
+    var MOBILE_LANDSCAPE_RIGHT_WIDTH = "116px";
     function syncTranscriptOffset() {
       if (isMobileBottomBarMode()) {
-        ui.appContainer.style.paddingTop = "56px";
+        ui.appContainer.style.height = "100dvh";
+        ui.appContainer.style.paddingTop = MOBILE_TOP_BAR_HEIGHT;
         ui.appContainer.style.paddingBottom = "100px";
+        ui.appContainer.style.paddingLeft = "0";
         ui.appContainer.style.paddingRight = "0";
       } else if (isMobileLandscapeMode()) {
+        ui.appContainer.style.height = "100dvh";
         ui.appContainer.style.paddingTop = "0";
         ui.appContainer.style.paddingBottom = "0";
-        ui.appContainer.style.paddingRight = "116px";
+        ui.appContainer.style.paddingLeft = MOBILE_LANDSCAPE_LEFT_WIDTH;
+        ui.appContainer.style.paddingRight = MOBILE_LANDSCAPE_RIGHT_WIDTH;
       } else {
+        ui.appContainer.style.height = "";
         ui.appContainer.style.paddingTop = "";
         ui.appContainer.style.paddingBottom = "";
+        ui.appContainer.style.paddingLeft = "";
         ui.appContainer.style.paddingRight = "";
       }
       ui.transcriptSection.style.paddingTop = "12px";
@@ -1625,6 +1717,10 @@
     ui.globalShowZhBtn.addEventListener("click", () => applyDisplayMode("L2"));
     ui.globalShowBothBtn.addEventListener("click", () => applyDisplayMode("both"));
     ui.globalBlurBtn.addEventListener("click", () => setGlobalBlur(!globalBlurEnabled));
+    ["mobileTopL1", "mobileLandL1"].forEach(function (id) { var b = document.getElementById(id); if (b) b.addEventListener("click", () => applyDisplayMode("L1")); });
+    ["mobileTopL2", "mobileLandL2"].forEach(function (id) { var b = document.getElementById(id); if (b) b.addEventListener("click", () => applyDisplayMode("L2")); });
+    ["mobileTopBoth", "mobileLandBoth"].forEach(function (id) { var b = document.getElementById(id); if (b) b.addEventListener("click", () => applyDisplayMode("both")); });
+    ["mobileTopBlur", "mobileLandBlur"].forEach(function (id) { var b = document.getElementById(id); if (b) b.addEventListener("click", () => setGlobalBlur(!globalBlurEnabled)); });
     ui.focusModeBtn.addEventListener("click", () => setFocusMode(!focusModeEnabled));
     ui.hidePlayerBtn.addEventListener("click", () => setPlayerHidden(!playerHidden));
     ui.toggleSidebarBtn.addEventListener("click", () => setSidebarHidden(!sidebarHidden));
@@ -1774,6 +1870,16 @@
     setSidebarHidden(sidebarHidden);
     window.addEventListener("resize", syncTranscriptOffset);
     if (window.visualViewport) window.visualViewport.addEventListener("resize", syncTranscriptOffset);
+    window.addEventListener("orientationchange", function () {
+      var run = function () {
+        document.documentElement.style.height = "";
+        document.body.style.height = "";
+        if (ui.appContainer) ui.appContainer.style.height = "";
+        syncTranscriptOffset();
+      };
+      setTimeout(run, 100);
+      if (window.requestAnimationFrame) requestAnimationFrame(run);
+    });
     window.addEventListener("load", ensureMobileBottomBar);
     syncTranscriptOffset();
     ensureMobileBottomBar();
