@@ -648,14 +648,6 @@
       <div id="transcriptList" class="space-y-2"></div>
     </section>
   </div>
-  <div id="mobile-bottom-bar" class="mobile-bottombar md:hidden fixed bottom-0 left-0 w-full z-[100] min-h-[70px] bg-white/90 backdrop-blur-md border-t-2 border-gray-800 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] pb-6" aria-label="手機直式底部控制列">
-    <div class="flex justify-around items-center p-3 max-w-md mx-auto w-full">
-      <button id="mob-prev" class="mobile-control-btn text-2xl p-2 text-gray-900 active:scale-95 transition-transform">⏪</button>
-      <button id="mob-play" class="mobile-control-btn text-3xl p-3 bg-blue-200 text-gray-900 rounded-full border-2 border-gray-800 shadow-sm active:scale-95 transition-transform">⏯️</button>
-      <button id="mob-loop" class="mobile-control-btn text-2xl p-2 text-gray-900 active:scale-95 transition-transform">🔁</button>
-      <button id="mob-next" class="mobile-control-btn text-2xl p-2 text-gray-900 active:scale-95 transition-transform">⏭️</button>
-    </div>
-  </div>
   <aside id="mobileLandscapePanel" class="mobile-landscape-panel" aria-label="手機橫式右側控制台">
     <div class="mobile-landscape-title">CTRL</div>
     <button id="mobileLandPlayPauseBtn" class="mobile-control-btn btn-primary">⏯️</button>
@@ -1097,7 +1089,10 @@
       } catch {}
     }
     function updateTrackLabels() { return; }
-    function renderSubtitles() { render(); }
+    function renderSubtitles() {
+      render();
+      ensureMobileBottomBar();
+    }
     function refreshGlobalButtons() {
       const active = "pill-btn border-cyan-300 bg-cyan-400 text-slate-900 font-semibold";
       const normal = "pill-btn border-slate-600 bg-slate-800";
@@ -1299,11 +1294,16 @@
         btn.textContent = state.loopModeEnabled && state.loopIndex === id ? "↻ 取消" : "↻ 循環";
       });
       ui.topPlayPauseBtn.textContent = playing ? "⏸️ 暫停" : "▶️ 播放";
-      if (ui.mobilePlayPauseBtn) ui.mobilePlayPauseBtn.textContent = playing ? "⏯️ 暫停" : "⏯️ 播放";
+      const mobPlayBtn = document.getElementById("mob-play");
+      if (mobPlayBtn) mobPlayBtn.textContent = playing ? "⏯️ 暫停" : "⏯️ 播放";
       if (ui.mobileLandPlayPauseBtn) ui.mobileLandPlayPauseBtn.textContent = playing ? "⏯️ 暫停" : "⏯️ 播放";
       const activeLine = state.currentIndex >= 0 ? state.subtitles[state.currentIndex] : null;
       const loopActive = Boolean(state.loopModeEnabled && activeLine && state.loopIndex === activeLine.id);
-      if (ui.mobileLoopBtn) ui.mobileLoopBtn.classList.toggle("active", loopActive);
+      const mobLoopBtn = document.getElementById("mob-loop");
+      if (mobLoopBtn) {
+        mobLoopBtn.style.background = loopActive ? "#A3B18A" : "transparent";
+        mobLoopBtn.style.borderRadius = loopActive ? "10px" : "0";
+      }
       if (ui.mobileLandLoopBtn) ui.mobileLandLoopBtn.classList.toggle("active", loopActive);
     }
     function toggleLinePlayback(i) {
@@ -1500,6 +1500,39 @@
       loadCounts(); saveBilingual(); render(); setRate(state.masterSpeed); setStatus("已套用雙語字幕。");
     }
 
+    function ensureMobileBottomBar() {
+      let bar = document.getElementById("mobile-bottom-bar");
+
+      if (!bar) {
+        bar = document.createElement("div");
+        bar.id = "mobile-bottom-bar";
+        document.body.appendChild(bar);
+      }
+
+      bar.className = "mobile-bottombar md:hidden fixed bottom-0 left-0 w-full z-[99999] bg-white border-t-2 border-gray-300 min-h-[80px] shadow-[0_-5px_15px_rgba(0,0,0,0.1)] flex justify-center items-center";
+      bar.setAttribute("aria-label", "手機直式底部控制列");
+
+      bar.innerHTML = `
+        <div style="display: flex; justify-content: space-around; align-items: center; width: 100%; max-width: 400px; padding: 0 10px;">
+          <button id="mob-prev" style="font-size: 28px; padding: 10px; color: #000; z-index: 100000; cursor: pointer;">⏪</button>
+          <button id="mob-play" style="font-size: 32px; padding: 10px 20px; background: #e0f2fe; border: 2px solid #111827; border-radius: 50px; color: #000; z-index: 100000; cursor: pointer;">⏯️</button>
+          <button id="mob-loop" style="font-size: 28px; padding: 10px; color: #000; z-index: 100000; cursor: pointer;">🔁</button>
+          <button id="mob-next" style="font-size: 28px; padding: 10px; color: #000; z-index: 100000; cursor: pointer;">⏭️</button>
+        </div>
+      `;
+
+      const prev = document.getElementById("mob-prev");
+      const play = document.getElementById("mob-play");
+      const loop = document.getElementById("mob-loop");
+      const next = document.getElementById("mob-next");
+      if (prev) prev.onclick = () => { if (typeof playPrevious === "function") playPrevious(); };
+      if (play) play.onclick = () => { if (typeof togglePlay === "function") togglePlay(); };
+      if (loop) loop.onclick = () => { if (typeof toggleCurrentLoop === "function") toggleCurrentLoop(); };
+      if (next) next.onclick = () => { if (typeof playNext === "function") playNext(); };
+
+      syncPlayPauseButtons();
+    }
+
     async function loadVideoAndTranscript() {
       const raw = ui.urlInput.value.trim();
       if (!raw) return setStatus("請先貼上 YouTube 網址或影片 ID", true);
@@ -1526,6 +1559,7 @@
         setRate(state.masterSpeed);
         applyPendingResume(videoId);
         setStatus("已回復此影片的雙語字幕與顯示設定。");
+        ensureMobileBottomBar();
         return;
       }
       setStatus("正在載入字幕...");
@@ -1539,8 +1573,9 @@
         setRate(state.masterSpeed);
         applyPendingResume(videoId);
         setStatus("字幕載入成功。");
+        ensureMobileBottomBar();
       }
-      catch { state.subtitles = []; renderSubtitles(); setStatus(FAIL_MSG, true); alert(FAIL_MSG); }
+      catch { state.subtitles = []; renderSubtitles(); setStatus(FAIL_MSG, true); alert(FAIL_MSG); ensureMobileBottomBar(); }
     }
 
     window.onYouTubeIframeAPIReady = () => {
@@ -1548,6 +1583,7 @@
       clearInterval(tickTimer);
       tickTimer = setInterval(tick, 100);
       setRate(state.masterSpeed);
+      ensureMobileBottomBar();
       if (pendingAutoLoadVideoId) {
         ui.urlInput.value = pendingAutoLoadVideoId;
         loadVideoAndTranscript();
@@ -1561,10 +1597,6 @@
     ui.prevBtn.addEventListener("click", playPrevious);
     ui.replayBtn.addEventListener("click", () => { if (state.subtitles.length) jumpTo(Number.isInteger(state.currentIndex) && state.currentIndex >= 0 ? state.currentIndex : 0, { increment: true }); });
     ui.nextBtn.addEventListener("click", playNext);
-    ui.mobilePrevBtn?.addEventListener("click", playPrevious);
-    ui.mobileNextBtn?.addEventListener("click", playNext);
-    ui.mobilePlayPauseBtn?.addEventListener("click", togglePlay);
-    ui.mobileLoopBtn?.addEventListener("click", toggleCurrentLoop);
     ui.mobileLandPrevBtn?.addEventListener("click", playPrevious);
     ui.mobileLandNextBtn?.addEventListener("click", playNext);
     ui.mobileLandPlayPauseBtn?.addEventListener("click", togglePlay);
@@ -1680,7 +1712,9 @@
     setSidebarHidden(sidebarHidden);
     window.addEventListener("resize", syncTranscriptOffset);
     if (window.visualViewport) window.visualViewport.addEventListener("resize", syncTranscriptOffset);
+    window.addEventListener("load", ensureMobileBottomBar);
     syncTranscriptOffset();
+    ensureMobileBottomBar();
     refreshGlobalButtons();
     let savedTheme = "warm";
     try { savedTheme = localStorage.getItem(themeStorageKey) || "warm"; } catch {}
