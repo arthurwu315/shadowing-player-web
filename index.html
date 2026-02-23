@@ -442,6 +442,12 @@
       visibility: visible;
       transform: translateY(0);
       pointer-events: auto;
+      z-index: 99998;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mobile-topbar.mobile-topbar-visible * {
+      pointer-events: auto;
     }
     .mobile-brand {
       font-family: "VT323", monospace;

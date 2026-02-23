@@ -20,7 +20,7 @@
 - 點擊任一字幕行可跳到該句開始時間。
 - 每行都有 `🔁 循環` 按鈕，可單句重複播放。
 - `重複本句` 改為持續狀態：開啟後若切到其他句，會自動改為重複新句，直到手動關閉。
-- 手機直式（Portrait）專屬：頂部功能列（程式名「跟讀」、語速、字幕 L1/L2/雙語/盲聽）**僅在往下滑到句子區域時**才固定出現在最上方，初始畫面不擋住載入區與影片；底部單列（上一句/循環/播放/下一句）常駐。
+- 手機直式（Portrait）專屬：頂部功能列（程式名「跟讀」、語速、字幕 L1/L2/雙語/盲聽）**僅在往下滑到句子區域時**才固定出現在最上方，初始畫面不擋住載入區與影片；顯示時提高 z-index、`touch-action: none` 與子元素 `pointer-events: auto`，避免點擊穿透到下層。底部單列（上一句/循環/播放/下一句）常駐。
 - 手機橫式（Landscape）專屬：上下功能列改為左右配置—左側固定列（程式名、語速、字幕）、右側固定控制台（播放/循環/上一句/下一句、語速），中間為影片與字幕區。
 - 直橫切換比例修復：監聽 `orientationchange` 並重算版面，搭配 `100dvh`，直橫切換後比例自動恢復正常。
 - 手機自適應防放大：viewport 設 `minimum-scale=1, maximum-scale=5`；`html`/`body` 設 `overflow-x: hidden`、`max-width: 100vw`、`-webkit-text-size-adjust: 100%`；手機媒體查詢內 `#app-container` 設 `max-height: 100dvh`、`overflow-x: hidden`，直式與橫式皆避免整頁被放大、可自適應螢幕。
@@ -166,6 +166,8 @@
 
 ## 更新紀錄
 
+- 2026-02-22（頂部列點擊穿透修復）
+  - 頂部功能列顯示時：`z-index: 99998`、`touch-action: none`、子元素統一 `pointer-events: auto`，避免點選時觸發穿透到下層背景（影片/字幕區）。
 - 2026-02-22（頂部列滾動顯示與手機自適應防放大）
   - 頂部功能列改為「滾動到句子區才出現」：直式時預設隱藏（opacity 0、translateY(-100%)），僅當 `#app-container` 捲動超過約 120px 時加上 `mobile-topbar-visible` 顯示於最上方，避免擋住初始頁面；顯示/隱藏時同步調整 `paddingTop` 與 scroll 位置避免畫面跳動。
   - 手機自適應防放大：viewport 增加 `minimum-scale=1, maximum-scale=5`；全域 `html`/`body` 設 `overflow-x: hidden`、`max-width: 100vw`、`-webkit-text-size-adjust: 100%`；直式與橫式媒體查詢內 `#app-container` 設 `max-height: 100dvh`、`overflow-x: hidden`、`html, body { max-width: 100vw }`，避免直橫擺放時整頁被放大、提升自適應。
