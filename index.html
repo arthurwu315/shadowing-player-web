@@ -1242,7 +1242,12 @@
       if (!line || !playerReady || !player) return;
       state.loopModeEnabled = true;
       state.loopIndex = line.id;
-      jumpTo(i, { increment: true, clearLoopFirst: false });
+      var alreadyOnThisLine = state.currentIndex === i;
+      if (!alreadyOnThisLine) {
+        jumpTo(i, { increment: true, clearLoopFirst: false });
+      } else {
+        setCurrent(i);
+      }
       let counted = false;
       clearInterval(loopTimer);
       loopTimer = setInterval(() => {
@@ -1302,10 +1307,19 @@
       const loopActive = Boolean(state.loopModeEnabled && activeLine && state.loopIndex === activeLine.id);
       const mobLoopBtn = document.getElementById("mob-loop");
       if (mobLoopBtn) {
+        mobLoopBtn.textContent = loopActive ? "🔁 開" : "🔁";
+        mobLoopBtn.title = loopActive ? "循環中（點擊關閉）" : "單句循環（點擊開啟）";
+        mobLoopBtn.setAttribute("aria-pressed", loopActive ? "true" : "false");
         mobLoopBtn.style.background = loopActive ? "#A3B18A" : "transparent";
-        mobLoopBtn.style.borderRadius = loopActive ? "10px" : "0";
+        mobLoopBtn.style.borderRadius = "10px";
+        mobLoopBtn.style.border = loopActive ? "2px solid #2d5016" : "2px solid transparent";
+        mobLoopBtn.style.fontWeight = loopActive ? "bold" : "normal";
       }
-      if (ui.mobileLandLoopBtn) ui.mobileLandLoopBtn.classList.toggle("active", loopActive);
+      if (ui.mobileLandLoopBtn) {
+        ui.mobileLandLoopBtn.classList.toggle("active", loopActive);
+        ui.mobileLandLoopBtn.textContent = loopActive ? "🔁 開" : "🔁";
+        ui.mobileLandLoopBtn.title = loopActive ? "循環中（點擊關閉）" : "單句循環（點擊開啟）";
+      }
     }
     function toggleLinePlayback(i) {
       if (!playerReady || !player || !state.subtitles[i]) return;
