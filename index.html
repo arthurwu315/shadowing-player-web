@@ -158,7 +158,7 @@
       color: #2b2d42;
       font-weight: 700;
     }
-    @media (max-width: 640px) { .control-panel { max-height: 80px; overflow: auto; } }
+    @media (max-width: 640px) { .control-panel { max-height: none; overflow: visible; } }
     .pill-btn {
       min-height: 44px;
       border-radius: var(--radius-control) !important;
@@ -266,7 +266,7 @@
       #app-container.sidebar-hidden #subtitle-container { width: 100% !important; min-width: 0; }
       #app-container.sidebar-hidden #showSidebarBtn { display: inline-flex; }
     }
-    @media (orientation: landscape) and (max-height: 560px) {
+    @media (orientation: landscape) and (max-height: 560px) and (min-width: 769px) {
       #controlTower { padding: 0.4rem !important; }
       #controlTower .aspect-video { max-height: 34vh; }
       #controlTower .control-panel { max-height: 72px; }
@@ -288,7 +288,7 @@
       .mobile-hide-landscape { display: none !important; }
       #subtitle-container { padding-top: 0.5rem !important; }
     }
-    @media (max-width: 768px) and (orientation: portrait) {
+    @media (max-width: 768px) {
       .mobile-topbar,
       .mobile-bottombar { display: flex; }
       #app-container {
@@ -299,11 +299,14 @@
         max-height: none;
         overflow: visible;
       }
-      #subtitle-container {
-        overflow: visible;
+      #subtitle-container { overflow: visible; padding-bottom: 96px !important; }
+      #controlTower .control-panel {
+        max-height: none !important;
+        overflow: visible !important;
       }
+      .playback-main-nav { display: none !important; }
     }
-    @media (max-width: 896px) and (orientation: landscape) {
+    @media (min-width: 769px) and (max-width: 896px) and (orientation: landscape) {
       .mobile-landscape-panel { display: flex; }
       .mobile-topbar,
       .mobile-bottombar { display: none !important; }
@@ -436,15 +439,16 @@
       left: 0;
       right: 0;
       bottom: 0;
-      z-index: 80;
+      z-index: 50;
       height: 64px;
       padding: 0.45rem 0.55rem calc(0.45rem + env(safe-area-inset-bottom));
-      background: rgba(255, 253, 246, 0.94);
+      background: #fffdf0;
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       border-top: 2px solid #433D3C;
+      box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
       align-items: center;
-      justify-content: space-between;
+      justify-content: space-around;
       gap: 0.4rem;
     }
     .mobile-control-btn {
@@ -551,7 +555,7 @@
             <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">字幕行數：<span id="countText">0</span></span>
             <span class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">目前句：<span id="currentLineText">-</span></span>
           </div>
-          <div class="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div class="playback-main-nav mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
             <button id="prevBtn" class="btn-secondary min-h-12">上一句</button>
             <button id="topPlayPauseBtn" class="btn-primary min-h-12">▶️ 播放</button>
             <button id="replayBtn" class="btn-secondary min-h-12">重播本句</button>
@@ -606,8 +610,8 @@
   </div>
   <div id="mobilePortraitBottomBar" class="mobile-bottombar" aria-label="手機直式底部控制列">
     <button id="mobilePrevBtn" class="mobile-control-btn btn-secondary">⏪ 上一句</button>
-    <button id="mobileLoopBtn" class="mobile-control-btn btn-secondary">🔁 循環</button>
     <button id="mobilePlayPauseBtn" class="mobile-control-btn btn-primary">⏯️ 播放</button>
+    <button id="mobileLoopBtn" class="mobile-control-btn btn-secondary">🔁 循環</button>
     <button id="mobileNextBtn" class="mobile-control-btn btn-primary">⏭️ 下一句</button>
   </div>
   <aside id="mobileLandscapePanel" class="mobile-landscape-panel" aria-label="手機橫式右側控制台">
@@ -968,9 +972,9 @@
       }));
     }
     function isMobileLayout() { return window.matchMedia("(max-width: 1024px)").matches; }
-    function isMobilePortraitMode() { return window.matchMedia("(max-width: 768px) and (orientation: portrait)").matches; }
-    function isMobileLandscapeMode() { return window.matchMedia("(max-width: 896px) and (orientation: landscape)").matches; }
-    function isMobileControlMode() { return isMobilePortraitMode() || isMobileLandscapeMode(); }
+    function isMobileBottomBarMode() { return window.matchMedia("(max-width: 768px)").matches; }
+    function isMobileLandscapeMode() { return window.matchMedia("(min-width: 769px) and (max-width: 896px) and (orientation: landscape)").matches; }
+    function isMobileControlMode() { return isMobileBottomBarMode() || isMobileLandscapeMode(); }
     function closeHistorySheet() { ui.historySheetWrap.classList.remove("open"); }
     function openHistorySheet() { ui.historySheetWrap.classList.add("open"); }
     function refreshHistoryAnchorUi() {
@@ -1148,9 +1152,9 @@
       currentCard.scrollIntoView({ behavior: "smooth", block: "center" });
     }
     function syncTranscriptOffset() {
-      if (isMobilePortraitMode()) {
+      if (isMobileBottomBarMode()) {
         ui.appContainer.style.paddingTop = "56px";
-        ui.appContainer.style.paddingBottom = "70px";
+        ui.appContainer.style.paddingBottom = "84px";
         ui.appContainer.style.paddingRight = "0";
       } else if (isMobileLandscapeMode()) {
         ui.appContainer.style.paddingTop = "0";
